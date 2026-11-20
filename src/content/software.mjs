@@ -1,0 +1,103 @@
+// Software comparison. Pricing is indicative — vendors change prices often.
+export const softwareNote = 'Pricing models are indicative (late 2026) and change often — always check the vendor before buying.';
+
+export const software = [
+  {
+    id: 'resolve', name: 'DaVinci Resolve / Resolve Studio', vendor: 'Blackmagic Design', category: 'All-in-one NLE + Color + VFX + Audio',
+    os: ['Windows', 'macOS', 'Linux', 'iPad'], price: 'Free; Studio is a one-time purchase', level: 'Beginner → Hollywood',
+    bestFor: ['Color grading', 'Feature films & series finishing', 'Budget-conscious creators', 'All-in-one workflows'],
+    pros: ['Industry-standard color tools', 'Incredibly capable free version', 'Fusion (node VFX) and Fairlight (pro audio) built-in', 'One-time payment for Studio, free upgrades historically', 'Strong AI tools in Studio (Magic Mask, Voice Isolation, Speed Warp, Relight)', 'Excellent collaboration (Blackmagic Cloud)'],
+    cons: ['Demanding on GPU/VRAM', 'Some codecs/features (H.265 10-bit hardware decode on Linux, NR, many AI tools) need Studio', 'Database/project system is unfamiliar at first', 'Fewer third-party templates than Premiere'],
+    scores: { editing: 9, color: 10, audio: 9, vfx: 8, motion: 6, speed: 8, value: 10, learning: 6 },
+  },
+  {
+    id: 'premiere', name: 'Adobe Premiere Pro', vendor: 'Adobe', category: 'NLE',
+    os: ['Windows', 'macOS'], price: 'Subscription (Creative Cloud)', level: 'Beginner → Pro',
+    bestFor: ['Agencies & corporate', 'YouTube & social creators', 'Teams already on Adobe', 'Motion graphics with After Effects'],
+    pros: ['Ubiquitous — most job listings ask for it', 'Dynamic Link with After Effects, Audition, Photoshop', 'Huge template/plugin ecosystem (MOGRTs)', 'Text-based editing, auto captions, Generative Extend and other AI features', 'Flexible timeline, broad codec support', 'Frame.io integration for review'],
+    cons: ['Subscription only', 'Can be less stable on very complex projects', 'Color tools (Lumetri) less advanced than Resolve', 'Performance depends heavily on hardware decode support'],
+    scores: { editing: 9, color: 7, audio: 7, vfx: 6, motion: 9, speed: 8, value: 6, learning: 8 },
+  },
+  {
+    id: 'fcp', name: 'Final Cut Pro', vendor: 'Apple', category: 'NLE',
+    os: ['macOS', 'iPad'], price: 'One-time purchase (Mac); subscription (iPad)', level: 'Beginner → Pro',
+    bestFor: ['Mac users', 'Fast turnarounds', 'YouTubers & documentary', 'Laptop editing'],
+    pros: ['Exceptionally fast and optimised on Apple Silicon', 'Magnetic timeline prevents sync errors and gaps', 'Keyword/metadata organisation is superb', 'One-time price', 'Great with Motion for templates'],
+    cons: ['Mac only', 'Magnetic timeline is polarising for traditional editors', 'Less common in agencies/post houses', 'Interchange with other apps needs XML tools'],
+    scores: { editing: 9, color: 7, audio: 6, vfx: 5, motion: 7, speed: 10, value: 9, learning: 8 },
+  },
+  {
+    id: 'avid', name: 'Avid Media Composer', vendor: 'Avid', category: 'NLE',
+    os: ['Windows', 'macOS'], price: 'Subscription / perpetual (enterprise)', level: 'Pro / Hollywood',
+    bestFor: ['Feature films', 'Scripted TV', 'Large shared-storage teams', 'Broadcast newsrooms'],
+    pros: ['Hollywood standard for decades', 'Unmatched media management and bin locking', 'ScriptSync and PhraseFind for dialogue', 'Rock-solid on long, huge projects', 'Seamless Pro Tools workflow'],
+    cons: ['Steep learning curve, dated UI', 'Prefers transcoding to DNx codecs', 'Weaker effects/graphics', 'Less relevant for social content'],
+    scores: { editing: 10, color: 5, audio: 7, vfx: 4, motion: 4, speed: 7, value: 5, learning: 4 },
+  },
+  {
+    id: 'aftereffects', name: 'Adobe After Effects', vendor: 'Adobe', category: 'Motion graphics & compositing',
+    os: ['Windows', 'macOS'], price: 'Subscription (Creative Cloud)', level: 'Intermediate → Pro',
+    bestFor: ['Motion graphics', 'Title design', '2.5D/3D compositing', 'MOGRT templates'],
+    pros: ['Industry standard for motion design', 'Massive plugin ecosystem (Trapcode, Element 3D, Saber)', 'Expressions for procedural animation', 'Roto Brush AI, Content-Aware Fill', 'Native 3D improvements'],
+    cons: ['Layer-based workflow gets messy for complex comps', 'RAM hungry, slow renders', 'Not an editor', 'Subscription only'],
+    scores: { editing: 3, color: 6, audio: 2, vfx: 8, motion: 10, speed: 5, value: 6, learning: 5 },
+  },
+  {
+    id: 'capcut', name: 'CapCut (Desktop & Mobile)', vendor: 'ByteDance', category: 'Social-first editor',
+    os: ['Windows', 'macOS', 'iOS', 'Android', 'Web'], price: 'Free tier; Pro subscription', level: 'Beginner → Intermediate',
+    bestFor: ['TikTok/Reels/Shorts', 'Trend templates', 'Auto captions', 'Fast mobile edits'],
+    pros: ['Fastest route to trending effects and captions', 'Huge template and effect library', 'Strong AI tools (auto captions, background removal, auto reframe)', 'Cross-device'],
+    cons: ['Limited pro color/audio control', 'Commercial-use rights vary for assets', 'Weak interchange (XML/AAF) for pro pipelines', 'Data/privacy and regional availability concerns for some organisations'],
+    scores: { editing: 7, color: 5, audio: 5, vfx: 6, motion: 7, speed: 9, value: 8, learning: 10 },
+  },
+  {
+    id: 'nuke', name: 'Nuke / NukeX', vendor: 'Foundry', category: 'VFX compositing',
+    os: ['Windows', 'macOS', 'Linux'], price: 'Subscription (expensive); free non-commercial edition', level: 'Pro / VFX',
+    bestFor: ['Feature film VFX', 'Deep compositing', 'Large pipelines'],
+    pros: ['The VFX industry standard', 'Node-based, scene-linear, multi-channel EXR', 'Deep compositing, 3D, scripting (Python)', 'Scales to massive pipelines'],
+    cons: ['Very expensive', 'Not an editor', 'Steep learning curve'],
+    scores: { editing: 1, color: 7, audio: 0, vfx: 10, motion: 5, speed: 6, value: 4, learning: 3 },
+  },
+  {
+    id: 'vegas', name: 'VEGAS Pro', vendor: 'VEGAS Creative Software', category: 'NLE',
+    os: ['Windows'], price: 'Subscription or perpetual', level: 'Beginner → Intermediate',
+    bestFor: ['Windows users', 'Audio-heavy editing', 'Gaming montages'],
+    pros: ['Fast, flexible timeline', 'Strong audio roots', 'Good plugin support'],
+    cons: ['Windows only', 'Smaller pro ecosystem', 'Less common in industry'],
+    scores: { editing: 7, color: 5, audio: 7, vfx: 5, motion: 5, speed: 7, value: 7, learning: 8 },
+  },
+  {
+    id: 'lumafusion', name: 'LumaFusion', vendor: 'LumaTouch', category: 'Mobile NLE',
+    os: ['iOS', 'iPadOS', 'Android', 'ChromeOS'], price: 'One-time purchase + optional add-ons', level: 'Beginner → Intermediate',
+    bestFor: ['Mobile journalism', 'On-the-go editing', 'iPad workflows'],
+    pros: ['Multi-track pro editing on tablets', 'Affordable', 'FCPXML export for finishing on desktop'],
+    cons: ['Limited color/VFX', 'Smaller screen workflow'],
+    scores: { editing: 7, color: 4, audio: 5, vfx: 3, motion: 4, speed: 8, value: 9, learning: 9 },
+  },
+  {
+    id: 'descript', name: 'Descript', vendor: 'Descript', category: 'Text-based editor',
+    os: ['Windows', 'macOS', 'Web'], price: 'Free tier; subscriptions', level: 'Beginner',
+    bestFor: ['Podcasts', 'Talking-head content', 'Screen recordings', 'Fast transcript editing'],
+    pros: ['Edit video by editing text', 'Filler word removal, studio sound', 'AI voice (with consent), easy captions'],
+    cons: ['Not for cinematic/complex edits', 'Limited color and effects', 'Cloud-centric'],
+    scores: { editing: 6, color: 3, audio: 7, vfx: 2, motion: 4, speed: 9, value: 7, learning: 10 },
+  },
+  {
+    id: 'kdenlive', name: 'Kdenlive', vendor: 'KDE (open source)', category: 'NLE',
+    os: ['Windows', 'macOS', 'Linux'], price: 'Free & open source', level: 'Beginner → Intermediate',
+    bestFor: ['Linux users', 'Zero budget', 'Open-source advocates'],
+    pros: ['Free forever, open source', 'Proxy workflow, multi-track, keyframes', 'Runs on modest hardware'],
+    cons: ['Less polished, occasional instability', 'Limited pro color & interchange'],
+    scores: { editing: 7, color: 4, audio: 5, vfx: 4, motion: 4, speed: 6, value: 10, learning: 7 },
+  },
+  {
+    id: 'blender', name: 'Blender', vendor: 'Blender Foundation (open source)', category: '3D, VFX & compositing',
+    os: ['Windows', 'macOS', 'Linux'], price: 'Free & open source', level: 'Intermediate → Pro',
+    bestFor: ['3D motion graphics', 'Camera tracking', '3D VFX elements'],
+    pros: ['Full 3D suite free', 'Excellent camera tracker', 'Node compositor', 'Huge community'],
+    cons: ['Video sequence editor is basic', 'Steep learning curve for 3D'],
+    scores: { editing: 4, color: 5, audio: 2, vfx: 9, motion: 8, speed: 5, value: 10, learning: 4 },
+  },
+];
+
+export const scoreLabels = { editing: 'Editing', color: 'Color', audio: 'Audio', vfx: 'VFX', motion: 'Motion GFX', speed: 'Speed', value: 'Value', learning: 'Ease of learning' };

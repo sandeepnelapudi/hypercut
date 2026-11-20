@@ -1,0 +1,16 @@
+{
+  "name": "hypercut-academy",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HYPERCUT: Edit God Mode — 90-day video editing course website",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "serve": "node scripts/serve.mjs",
+    "icons": "node scripts/gen-images.mjs",
+    "test": "node --test tests/unit/*.test.mjs",
+    "test:e2e": "node scripts/build.mjs && node tests/e2e/run.mjs",
+    "test:all": "npm test && npm run test:e2e"
+  }
+}
