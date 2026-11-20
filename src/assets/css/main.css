@@ -522,3 +522,16 @@ figure.scope { margin: 0; }
 @media print { .missions, .ctl-row button, .file-btn { display: none !important; } }
 .lab-grid-2 > .canvas-wrap { align-self: start; }
 .lab-grid-2 > .canvas-wrap.center { background: transparent; border: 0; }
+/* Lesson video */
+.lesson-video { margin: 0 0 1.4rem; }
+.lesson-video video, .video-facade { display: block; width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: var(--radius); border: 1px solid var(--border); }
+.lesson-video figcaption { margin-top: .5rem; font-size: .92rem; }
+.lesson-video iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: var(--radius); }
+.video-facade { position: relative; overflow: hidden; display: grid; place-items: center; }
+.video-facade img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .75; }
+.video-play { position: relative; width: 84px; height: 84px; border-radius: 50%; border: 0; background: var(--grad); color: #fff; font-size: 2rem; cursor: pointer; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+.video-note { position: absolute; bottom: 8px; left: 12px; right: 12px; margin: 0; color: #ddd; text-shadow: 0 1px 3px #000; }
+.chapters { list-style: none; padding: 0; margin: .6rem 0 0; display: flex; flex-wrap: wrap; gap: .4rem; }
+.callout.ai-note { border-color: #a55cff; }
+.chapters .chip { text-transform: none; }
+.lab-root .form input[type="text"] { max-width: none; }

@@ -220,6 +220,7 @@ export async function deleteAccount(password) {
   const db = getDB();
   await db.delete('progress', u.id);
   await db.delete('tools', `shotlist-${u.id}`);
+  await db.delete('tools', `prompts-${u.id}`);
   await db.delete('emails', await emailKey(u.email));
   await db.delete('users', u.id);
   // Remove all sessions for this user

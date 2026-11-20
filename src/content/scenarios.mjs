@@ -1,3 +1,4 @@
+import { aiScenarios } from './ai-video.mjs';
 // Real-World Scenario Playbook: problem → diagnosis → fix → prevention.
 // category: audio | picture | color | workflow | client | social | vfx
 
@@ -447,3 +448,4 @@ export const scenarios = [
     prevention: 'Shoot a color chart; get brand color values (HEX/RGB) before grading.',
   },
 ];
+scenarios.push(...aiScenarios);

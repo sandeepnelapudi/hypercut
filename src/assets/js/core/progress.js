@@ -126,8 +126,10 @@ export function mergeProgress(a, b) {
 export async function migrateGuestTo(userId) {
   const db = getDB();
   // Carry over a guest shot list if the account doesn't have one yet.
-  const gs = await db.get('tools', 'shotlist-guest');
-  if (gs && !(await db.get('tools', `shotlist-${userId}`))) { await db.put('tools', `shotlist-${userId}`, gs); await db.delete('tools', 'shotlist-guest'); }
+  for (const tool of ['shotlist', 'prompts']) {
+    const gs = await db.get('tools', `${tool}-guest`);
+    if (gs && !(await db.get('tools', `${tool}-${userId}`))) { await db.put('tools', `${tool}-${userId}`, gs); await db.delete('tools', `${tool}-guest`); }
+  }
   const guest = await db.get('progress', GUEST_ID);
   if (!guest) return false;
   const mine = await db.get('progress', userId);

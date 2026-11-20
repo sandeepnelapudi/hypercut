@@ -11,6 +11,8 @@ import { effects } from '../src/content/effects.mjs';
 import { glossary } from '../src/content/glossary.mjs';
 import { engineChapters } from '../src/content/engine.mjs';
 import { tools, TOOL_CATEGORIES, BUDGETS, FOCUSES } from '../src/content/toolkit.mjs';
+import { aiChapters, aiLessonNotes, aiScenarios, aiEffects, aiTools } from '../src/content/ai-video.mjs';
+import { lessonVideos, validateVideo, isoToSeconds } from '../src/content/videos.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(ROOT, 'dist');
@@ -37,6 +39,7 @@ const CSP = [
   "font-src 'self'",
   "connect-src 'self'",
   "media-src 'self' blob: data:",
+  'frame-src https://www.youtube-nocookie.com https://player.vimeo.com',
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -51,6 +54,7 @@ const NAV = [
   ['/effects/', 'Effects'],
   ['/software/', 'Software'],
   ['/engine/', 'Engine'],
+  ['/ai-video/', 'AI Video'],
 ];
 
 function layout({ title, description, urlPath, body, jsonld = [], noindex = false, scripts = [], ogType = 'website', bodyClass = '' }) {
@@ -113,7 +117,7 @@ ${body}
   <div class="container footer-grid">
     <div><a class="brand" href="/"><span class="brand-mark" aria-hidden="true">▶</span><span class="brand-name">HYPER<span>CUT</span></span></a><p class="muted">${esc(site.tagline)}</p></div>
     <div><h2 class="footer-h">Learn</h2><ul><li><a href="/curriculum/">Curriculum</a></li><li><a href="/planner/">90-Day Planner</a></li><li><a href="/flashcards/">Flashcards</a></li><li><a href="/glossary/">Glossary</a></li></ul></div>
-    <div><h2 class="footer-h">Master</h2><ul><li><a href="/labs/">Interactive Labs</a></li><li><a href="/toolkit/">Editor's Toolkit</a></li><li><a href="/playbook/">Scenario Playbook</a></li><li><a href="/effects/">Effects Cookbook</a></li><li><a href="/engine/">Inside the Engine</a></li></ul></div>
+    <div><h2 class="footer-h">Master</h2><ul><li><a href="/labs/">Interactive Labs</a></li><li><a href="/toolkit/">Editor's Toolkit</a></li><li><a href="/playbook/">Scenario Playbook</a></li><li><a href="/effects/">Effects Cookbook</a></li><li><a href="/engine/">Inside the Engine</a></li><li><a href="/ai-video/">AI Video Masterclass</a></li></ul></div>
     <div><h2 class="footer-h">About</h2><ul><li><a href="/about/">About HYPERCUT</a></li><li><a href="/software/">Software Compared</a></li><li><a href="/privacy/">Privacy</a></li><li><a href="/terms/">Terms</a></li></ul></div>
   </div>
   <div class="container footer-bottom muted">© ${new Date().getFullYear()} ${esc(site.fullName)}. Made for editors who refuse to be average.</div>
@@ -296,6 +300,49 @@ function quizBlock(w) {
 </section>`;
 }
 
+// ---------- lesson video ----------
+const fmtClock = (sec) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}`;
+for (const [id, v] of Object.entries(lessonVideos)) {
+  const errs = validateVideo(id, v);
+  if (errs.length) throw new Error(`videos.mjs → ${id}: ${errs.join('; ')}`);
+}
+function videoBlock(v) {
+  const secs = isoToSeconds(v.duration);
+  const cap = `<figcaption><strong>${esc(v.title)}</strong> <span class="muted">· ${fmtClock(secs)}</span>${v.ai ? ' <span class="tag essential">AI-generated video</span>' : ''}${v.credit ? `<br><span class="muted small">${esc(v.credit)}</span>` : ''}</figcaption>`;
+  const chapters = v.chapters?.length && v.kind === 'file' ? `<ol class="chapters" aria-label="Video chapters">${v.chapters.map((c) => `<li><button type="button" class="chip" data-seek="${Number(c.t)}">${fmtClock(c.t)} · ${esc(c.label)}</button></li>`).join('')}</ol>` : '';
+  if (v.kind === 'file') {
+    return `<figure class="lesson-video" id="lesson-video">
+  <video controls preload="metadata" playsinline${v.poster ? ` poster="${esc(v.poster)}"` : ''} aria-label="${esc(v.title)}">
+    <source src="${esc(v.src)}" type="${esc(v.type)}">
+    ${v.fallback ? `<source src="${esc(v.fallback.src)}" type="${esc(v.fallback.type)}">` : ''}
+    ${v.captions ? `<track kind="captions" src="${esc(v.captions)}" srclang="en" label="English" default>` : ''}
+    Your browser cannot play this video. <a href="${esc(v.src)}">Download it</a>.
+  </video>
+  ${cap}${chapters}
+</figure>`;
+  }
+  const host = v.kind === 'youtube' ? 'YouTube' : 'Vimeo';
+  return `<figure class="lesson-video" id="lesson-video">
+  <div class="video-facade" data-embed-kind="${v.kind}" data-embed-id="${esc(v.id)}" data-embed-title="${esc(v.title)}">
+    ${v.poster ? `<img src="${esc(v.poster)}" alt="" loading="lazy" width="1280" height="720">` : ''}
+    <button type="button" class="video-play" aria-label="Play video: ${esc(v.title)}">▶</button>
+    <p class="video-note small">Plays from ${host}. Nothing loads from ${host} until you press play.</p>
+  </div>
+  ${cap}
+</figure>`;
+}
+function videoLd(v, pageUrl) {
+  const thumb = v.poster ? site.url + v.poster : v.kind === 'youtube' ? `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg` : site.url + '/assets/img/og.png';
+  const ld = { '@context': 'https://schema.org', '@type': 'VideoObject', name: v.title, description: v.description, thumbnailUrl: [thumb], uploadDate: v.uploadDate, duration: v.duration, inLanguage: 'en', isFamilyFriendly: true };
+  if (v.kind === 'file') ld.contentUrl = site.url + v.src;
+  else ld.embedUrl = v.kind === 'youtube' ? `https://www.youtube-nocookie.com/embed/${v.id}` : `https://player.vimeo.com/video/${v.id}`;
+  if (v.kind === 'file' && v.chapters?.length) {
+    const total = isoToSeconds(v.duration);
+    ld.hasPart = v.chapters.map((c, i) => ({ '@type': 'Clip', name: c.label, startOffset: c.t, endOffset: v.chapters[i + 1]?.t ?? total, url: `${pageUrl}?t=${c.t}` }));
+  }
+  return ld;
+}
+
 async function buildWeeks() {
   for (const w of weeks) {
     const prev = weeks[w.n - 2];
@@ -315,7 +362,7 @@ async function buildWeeks() {
       </section>
       <section class="card">
         <h2>Lessons</h2>
-        <ol class="lesson-list">${w.lessons.map((l, i) => `<li data-lesson="${lessonId(w.n, i)}"><a href="${lessonPath(w, l)}"><span class="lesson-title">${esc(l.title)}</span><span class="muted small">${l.minutes} min · ${esc(l.summary)}</span></a><span class="done-badge" aria-hidden="true">✓</span></li>`).join('')}</ol>
+        <ol class="lesson-list">${w.lessons.map((l, i) => `<li data-lesson="${lessonId(w.n, i)}"><a href="${lessonPath(w, l)}"><span class="lesson-title">${esc(l.title)}${lessonVideos[lessonId(w.n, i)] ? ' <span class="tag">▶ video</span>' : ''}${aiLessonNotes[l.slug] ? ' <span class="tag">🤖 AI</span>' : ''}</span><span class="muted small">${l.minutes} min · ${esc(l.summary)}</span></a><span class="done-badge" aria-hidden="true">✓</span></li>`).join('')}</ol>
       </section>
       ${quizBlock(w)}
     </div>
@@ -363,12 +410,14 @@ async function buildWeeks() {
     <p class="eyebrow">Week ${pad2(w.n)} · Lesson ${i + 1} · ${l.minutes} min</p>
     <h1 class="page-title">${esc(l.title)}</h1>
     <p class="lead">${esc(l.summary)}</p>
+    ${lessonVideos[id] ? videoBlock(lessonVideos[id]) : ''}
     <div class="lesson-tools">
       <button class="btn btn-sm" type="button" data-complete="${id}" aria-pressed="false">Mark complete</button>
       <button class="btn btn-sm btn-ghost" type="button" data-bookmark="${id}" aria-pressed="false">☆ Bookmark</button>
       <span class="reading-progress" aria-hidden="true"><span></span></span>
     </div>
     <div class="prose">${l.body}</div>
+    ${aiLessonNotes[l.slug] ? `<aside class="callout ai-note"><strong>🤖 AI angle:</strong> ${esc(aiLessonNotes[l.slug])} <a href="/ai-video/">AI Video Masterclass →</a></aside>` : ''}
     <section class="card keypoints"><h2 class="h3">Key takeaways</h2><ul class="checks">${l.keyPoints.map((k) => `<li>${esc(k)}</li>`).join('')}</ul></section>
     <section class="card exercise"><h2 class="h3">🎬 Practice drill</h2><p>${esc(l.exercise)}</p></section>
     <section class="card notes">
@@ -388,7 +437,7 @@ async function buildWeeks() {
         timeRequired: `PT${l.minutes}M`, inLanguage: 'en', isAccessibleForFree: true, keywords: l.keyPoints.join(', '),
         isPartOf: { '@type': 'Course', name: site.fullName, url: site.url + '/curriculum/' }, datePublished: BUILD_DATE,
       };
-      await emit(lp, layout({ title: l.title, description: `${l.summary} Week ${w.n} of the HYPERCUT video editing course.`, urlPath: lp, body: lbody, jsonld: [breadcrumbLd(lcrumbs), lessonLd], scripts: ['/assets/js/pages/lesson.js'], ogType: 'article' }), { priority: 0.7 });
+      await emit(lp, layout({ title: l.title, description: `${l.summary} Week ${w.n} of the HYPERCUT video editing course.`, urlPath: lp, body: lbody, jsonld: [breadcrumbLd(lcrumbs), lessonLd, ...(lessonVideos[id] ? [videoLd(lessonVideos[id], site.url + lp)] : [])], scripts: ['/assets/js/pages/lesson.js'], ogType: lessonVideos[id] ? 'video.other' : 'article' }), { priority: 0.7 });
     }
   }
 }
@@ -418,6 +467,7 @@ const labTheory = {
   'captions-srt': 'Professional subtitle guidelines (Netflix, BBC and others) recommend 1–2 lines, about 42 characters per line (shorter for vertical video), and a reading speed of around 15–20 characters per second. The tool breaks your text at word and sentence boundaries, times each caption in proportion to its length, and flags captions that are too fast to read.',
   'rate-calculator': 'Day rate = (take-home income grossed up for tax + business expenses) ÷ billable days. Billable days = working weeks × days per week × utilisation. Quotes estimate editing hours from the finished duration and project type, with add-ons for grading, sound and extra revision rounds.',
   'shot-list': 'A shot list is the bridge between script and edit. Planning coverage (wide for geography, mediums for performance, close-ups for emotion, inserts for rhythm) makes sure the editor has the shots needed to cut the scene. Exported CSV cells are protected against spreadsheet formula injection.',
+  'ai-prompt-builder': 'AI video generators respond best to concrete cinematography language rather than vague adjectives. The builder assembles the subject, action, setting, shot size and angle, lens and depth of field, camera movement, lighting, palette, texture, mood, duration and aspect ratio into one single-shot prompt, plus a negative prompt. Prompts are scored on how much of the shot they pin down. Saving prompts with identical subject wording keeps characters consistent across shots.',
   'shortcut-trainer': 'Speed comes from muscle memory. Shortcuts listed are default mappings, and some differ by OS and version, so check your app\'s keyboard customisation panel. On macOS, Cmd replaces Ctrl.',
 };
 
@@ -583,6 +633,27 @@ async function buildToolkit() {
   await emit('/toolkit/', layout({ title: 'Essential Video Editing Tools, Plugins & Hardware', description: 'The essential video editing toolkit: free utilities, audio repair, color calibration, plugins, review tools, licensed music and hardware, with a kit builder for every budget.', urlPath: '/toolkit/', body, jsonld: [breadcrumbLd(crumbs), listLd], scripts: ['/assets/js/pages/toolkit.js'] }), { priority: 0.9 });
 }
 
+async function buildAiVideo() {
+  const crumbs = [['Home', '/'], ['AI Video Masterclass', '/ai-video/']];
+  const notedLessons = weeks.flatMap((w) => w.lessons.filter((l) => aiLessonNotes[l.slug]).map((l) => ({ w, l })));
+  const body = `
+<section class="container section narrow">
+  ${breadcrumbHtml(crumbs)}
+  <p class="eyebrow">Bonus module · Week 12 extension</p>
+  <h1 class="page-title">AI Video Masterclass</h1>
+  <p class="lead">How AI video generators work, how to prompt them with cinematography language, how to make AI shots cut invisibly with real footage, and how to use them legally and ethically. The tools change monthly; these principles don't.</p>
+  <div class="row-gap"><a class="btn" href="/labs/ai-prompt-builder/">🤖 Open the AI Shot Prompt Builder</a><a class="btn btn-ghost" href="/lesson/12-ai-in-editing/">Week 12: AI in Video Editing</a></div>
+  <nav class="toc card" aria-label="Chapters"><h2 class="h4">Chapters</h2><ol class="pipeline">${aiChapters.map((c) => `<li><a href="#${c.id}">${esc(c.title.replace(/^\d+\.\s*/, ''))}</a></li>`).join('')}</ol></nav>
+  ${aiChapters.map((c) => `<section class="engine-chapter" id="${c.id}"><h2>${esc(c.title)}</h2><div class="prose">${c.body}</div></section>`).join('')}
+  <section class="card"><h2 class="h3">AI problems in the Scenario Playbook</h2><ul class="link-list">${aiScenarios.map((s) => `<li><a href="/playbook/#${s.id}">${esc(s.title)}</a></li>`).join('')}</ul></section>
+  <section class="card"><h2 class="h3">AI recipes in the Effects Cookbook</h2><ul class="link-list">${aiEffects.map((e) => `<li><a href="/effects/#${e.id}">${esc(e.name)}</a></li>`).join('')}</ul></section>
+  <section class="card"><h2 class="h3">AI tools in the Toolkit</h2><ul class="link-list">${aiTools.map((t) => `<li><a href="/toolkit/#tool-${t.id}">${esc(t.name)}</a></li>`).join('')}</ul></section>
+  <section class="card"><h2 class="h3">The AI angle in every relevant lesson</h2><ul class="link-list">${notedLessons.map(({ w, l }) => `<li><a href="${lessonPath(w, l)}">Week ${w.n}: ${esc(l.title)}</a></li>`).join('')}</ul></section>
+</section>`;
+  const ld = { '@context': 'https://schema.org', '@type': 'Article', headline: 'AI Video Masterclass: generation, prompting, integration and ethics', description: 'How AI video generators work, how to prompt them with cinematography language, how to match AI shots to real footage, and how to use AI video legally and ethically.', url: site.url + '/ai-video/', datePublished: BUILD_DATE, author: { '@type': 'Organization', name: site.fullName } };
+  await emit('/ai-video/', layout({ title: 'AI Video Masterclass: Generation, Prompting & Editing', description: 'Learn AI video generation for editors: how diffusion video models work, prompting with shot language, consistency, matching AI shots to real footage, AI B-roll and dubbing, and ethics.', urlPath: '/ai-video/', body, jsonld: [breadcrumbLd(crumbs), ld], ogType: 'article' }), { priority: 0.9 });
+}
+
 async function buildEngine() {
   const body = `
 <section class="container section narrow">
@@ -724,6 +795,7 @@ async function buildSearchIndex() {
   effects.forEach((e) => idx.push({ t: e.name, u: `/effects/#${e.id}`, k: 'Effect', s: e.trend, b: e.steps.join(' ') }));
   software.forEach((s) => idx.push({ t: s.name, u: `/software/#sw-${s.id}`, k: 'Software', s: s.category, b: `${s.pros.join(' ')} ${s.cons.join(' ')} ${s.bestFor.join(' ')}` }));
   glossary.forEach(([t, d]) => idx.push({ t, u: `/glossary/#term-${slugify(t)}`, k: 'Term', s: d, b: '' }));
+  aiChapters.forEach((c) => idx.push({ t: `AI Video: ${c.title.replace(/^\d+\.\s*/, '')}`, u: `/ai-video/#${c.id}`, k: 'AI Video', s: stripTags(c.body).slice(0, 160), b: stripTags(c.body) }));
   tools.forEach((t) => idx.push({ t: t.name, u: `/toolkit/#tool-${t.id}`, k: 'Tool', s: t.what, b: t.why }));
   engineChapters.forEach((c) => idx.push({ t: c.title, u: `/engine/#${c.id}`, k: 'Engine', s: stripTags(c.body).slice(0, 160), b: stripTags(c.body) }));
   await writeFile(path.join(DIST, 'search-index.json'), JSON.stringify(idx));
@@ -770,6 +842,7 @@ async function main() {
   await buildEffects();
   await buildEngine();
   await buildToolkit();
+  await buildAiVideo();
   await buildGlossary();
   await buildAppPages();
   await buildStatic();

@@ -1,3 +1,4 @@
+import { aiEffects } from './ai-video.mjs';
 // Effects Cookbook — trending effects with step-by-step recipes.
 export const effects = [
   { id: 'speed-ramp', name: 'Speed Ramp', difficulty: 2, trend: 'Car, sport, travel, dance edits', week: 10,
@@ -43,3 +44,4 @@ export const effects = [
   { id: 'seamless-loop', name: 'Seamless Loop Ending', difficulty: 2, trend: 'Shorts/Reels replays', week: 10,
     steps: ['Plan the last line to flow into the first', 'Match framing/motion of last and first frames', 'Cross-fade audio ambience across the loop', 'Avoid end cards that break the loop'] },
 ];
+effects.push(...aiEffects);

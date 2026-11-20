@@ -11,8 +11,9 @@ const TYPES = {
   '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
   '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.xml': 'application/xml; charset=utf-8',
   '.txt': 'text/plain; charset=utf-8', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2',
+  '.mp4': 'video/mp4', '.webm': 'video/webm', '.vtt': 'text/vtt; charset=utf-8', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp',
 };
-const CSP = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; media-src 'self' blob: data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
+const CSP = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; media-src 'self' blob: data:; frame-src https://www.youtube-nocookie.com https://player.vimeo.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
 const SEC = {
   'Content-Security-Policy': CSP, 'X-Frame-Options': 'DENY', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=()', 'Cross-Origin-Opener-Policy': 'same-origin', 'Cross-Origin-Resource-Policy': 'same-origin',
@@ -45,7 +46,17 @@ export function createServer() {
       }
       const body = await readFile(file);
       const type = TYPES[path.extname(file).toLowerCase()] || 'application/octet-stream';
-      res.writeHead(200, { 'Content-Type': type, 'Cache-Control': file.includes(`${path.sep}assets${path.sep}`) ? 'public, max-age=3600' : 'no-cache', ...SEC });
+      const headers = { 'Content-Type': type, 'Accept-Ranges': 'bytes', 'Cache-Control': file.includes(`${path.sep}assets${path.sep}`) ? 'public, max-age=3600' : 'no-cache', ...SEC };
+      // Byte-range requests (needed for video seeking).
+      const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || '');
+      if (range && (range[1] || range[2])) {
+        let start = range[1] ? Number(range[1]) : Math.max(0, body.length - Number(range[2]));
+        let end = range[1] && range[2] ? Math.min(Number(range[2]), body.length - 1) : body.length - 1;
+        if (start > end || start >= body.length) { res.writeHead(416, { 'Content-Range': `bytes */${body.length}`, ...SEC }); return res.end(); }
+        res.writeHead(206, { ...headers, 'Content-Range': `bytes ${start}-${end}/${body.length}`, 'Content-Length': end - start + 1 });
+        return res.end(req.method === 'HEAD' ? undefined : body.subarray(start, end + 1));
+      }
+      res.writeHead(200, { ...headers, 'Content-Length': body.length });
       res.end(req.method === 'HEAD' ? undefined : body);
     } catch {
       res.writeHead(500, SEC); res.end('Server error');

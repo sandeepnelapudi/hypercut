@@ -83,3 +83,36 @@ if (bar && article) {
 
 init().catch(() => {});
 addEventListener('hc:auth', () => init().catch(() => {}));
+
+// ---------- Lesson video ----------
+const video = document.querySelector('.lesson-video video');
+if (video) {
+  const seek = (t) => {
+    const go = () => { video.currentTime = Math.min(t, Math.max(0, (video.duration || t) - 0.1)); video.play().catch(() => {}); };
+    if (video.readyState >= 1) go(); else video.addEventListener('loadedmetadata', go, { once: true });
+  };
+  document.querySelectorAll('.lesson-video [data-seek]').forEach((b) => b.addEventListener('click', () => seek(Number(b.dataset.seek) || 0)));
+  // Deep links from search engines' "key moments": ?t=SECONDS
+  const t = Number(new URLSearchParams(location.search).get('t'));
+  if (Number.isFinite(t) && t > 0 && t < 36000) { video.preload = 'auto'; seek(t); document.getElementById('lesson-video')?.scrollIntoView({ block: 'center' }); }
+}
+// Privacy-friendly embeds: build the iframe only after the learner presses play.
+document.querySelectorAll('.video-facade').forEach((f) => {
+  const btn = f.querySelector('.video-play');
+  btn?.addEventListener('click', () => {
+    const kind = f.dataset.embedKind, id = f.dataset.embedId || '';
+    let src = null;
+    if (kind === 'youtube' && /^[A-Za-z0-9_-]{11}$/.test(id)) src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&modestbranding=1`;
+    if (kind === 'vimeo' && /^\d{6,12}$/.test(id)) src = `https://player.vimeo.com/video/${id}?autoplay=1&dnt=1`;
+    if (!src) return;
+    const iframe = document.createElement('iframe');
+    iframe.src = src;
+    iframe.title = f.dataset.embedTitle || 'Lesson video';
+    iframe.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+    iframe.allowFullscreen = true;
+    iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+    iframe.loading = 'lazy';
+    f.replaceWith(iframe);
+    iframe.focus();
+  });
+});

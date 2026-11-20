@@ -345,3 +345,40 @@ export function csvCell(v) {
   return /[",\n\r]/.test(s) || s !== s.trim() ? `"${s.replace(/"/g, '""')}"` : s;
 }
 export function toCSV(rows) { return rows.map((r) => r.map(csvCell).join(',')).join('\r\n'); }
+
+// ---------------- AI shot prompt builder ----------------
+export const PROMPT_OPTIONS = {
+  size: ['', 'Extreme wide shot', 'Wide shot', 'Medium wide shot', 'Medium shot', 'Medium close-up', 'Close-up', 'Extreme close-up', 'Insert shot', 'Over-the-shoulder shot', 'POV shot', 'Aerial shot'],
+  angle: ['', 'eye-level', 'low-angle', 'high-angle', 'Dutch-angle', 'overhead top-down'],
+  lens: ['', '14mm ultra-wide, deep focus', '24mm wide', '35mm natural perspective', '50mm normal lens', '85mm portrait lens, shallow depth of field', '135mm telephoto, compressed background', '100mm macro'],
+  move: ['', 'static locked-off camera', 'slow dolly in', 'slow dolly out', 'smooth tracking shot alongside the subject', 'handheld, subtle shake', 'gimbal follow from behind', 'slow orbit around the subject', 'crane up revealing the location', 'FPV drone fly-through', 'slow pan left to right', 'rack focus from foreground to subject'],
+  light: ['', 'soft window light from camera left', 'hard sunlight, crisp shadows', 'golden hour backlight with rim light', 'overcast soft daylight', 'single practical lamp, low-key, 8:1 contrast', 'neon signs, mixed color light', 'moonlight blue ambience', 'high-key studio lighting, 2:1 contrast', 'Rembrandt lighting, 4:1 contrast'],
+  palette: ['', 'teal and orange grade', 'muted desaturated palette', 'warm nostalgic palette, faded blacks', 'cool blue night palette', 'vibrant saturated colors', 'black and white, high contrast', 'pastel palette'],
+  texture: ['', 'shot on 35mm film, fine grain, soft halation', '16mm film, visible grain', 'clean digital cinema camera look', 'VHS camcorder look', 'anamorphic lens flares, oval bokeh'],
+  aspect: ['16:9', '2.39:1', '9:16', '1:1', '4:5'],
+};
+const clip = (s, n) => String(s ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n);
+const pick = (key, v) => (PROMPT_OPTIONS[key].includes(v) ? v : '');
+export function buildShotPrompt(o = {}) {
+  const size = pick('size', o.size), angle = pick('angle', o.angle), lens = pick('lens', o.lens), move = pick('move', o.move);
+  const light = pick('light', o.light), palette = pick('palette', o.palette), texture = pick('texture', o.texture);
+  const aspect = pick('aspect', o.aspect) || '16:9';
+  const subject = clip(o.subject, 160), action = clip(o.action, 160), setting = clip(o.setting, 160), mood = clip(o.mood, 80);
+  const dur = Math.max(2, Math.min(20, Math.round(Number(o.duration) || 5)));
+  const head = [angle && size ? `${angle.charAt(0).toUpperCase() + angle.slice(1)} ${size.toLowerCase()}` : size || (angle ? `${angle.charAt(0).toUpperCase() + angle.slice(1)} shot` : ''), subject ? `of ${subject}` : '', action].filter(Boolean).join(' ');
+  const sentences = [
+    [head, setting].filter(Boolean).join(', '),
+    lens && lens.charAt(0).toUpperCase() + lens.slice(1),
+    move && move.charAt(0).toUpperCase() + move.slice(1),
+    light && light.charAt(0).toUpperCase() + light.slice(1),
+    palette && palette.charAt(0).toUpperCase() + palette.slice(1),
+    texture && texture.charAt(0).toUpperCase() + texture.slice(1),
+    mood && `Mood: ${mood}`,
+    `${dur} seconds, ${aspect}, one continuous shot, no cuts`,
+  ].filter(Boolean).map((x) => x.replace(/\.$/, '') + '.');
+  const negative = ['text', 'subtitles', 'logos', 'watermark', 'extra fingers', 'distorted faces', 'morphing', 'flicker'].concat(o.avoid ? clip(o.avoid, 160).split(',').map((x) => x.trim()).filter(Boolean) : []).slice(0, 16);
+  const missing = [];
+  if (!size) missing.push('shot size'); if (!subject) missing.push('subject'); if (!lens) missing.push('lens'); if (!move) missing.push('camera movement'); if (!light) missing.push('lighting'); if (!palette) missing.push('color palette');
+  const score = 6 - missing.length + (angle ? 1 : 0) + (texture ? 1 : 0) + (setting ? 1 : 0) + (action ? 1 : 0);
+  return { prompt: sentences.join(' '), negative: negative.join(', '), missing, score, max: 10 };
+}

@@ -35,7 +35,8 @@ document.getElementById('export-data')?.addEventListener('click', async () => {
   const u = await currentUser();
   if (!u) return;
   const shotList = await getDB().get('tools', `shotlist-${u.id}`).catch(() => null);
-  const data = { exportedAt: new Date().toISOString(), account: u, progress: await loadProgress(), shotList };
+  const aiPrompts = await getDB().get('tools', `prompts-${u.id}`).catch(() => null);
+  const data = { exportedAt: new Date().toISOString(), account: u, progress: await loadProgress(), shotList, aiPrompts };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = h('a', { href: '#', download: `hypercut-data-${new Date().toISOString().slice(0, 10)}.json` });

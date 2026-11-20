@@ -1,6 +1,7 @@
 import { weeks1to4 } from './weeks-01-04.mjs';
 import { weeks5to8 } from './weeks-05-08.mjs';
 import { weeks9to12 } from './weeks-09-12.mjs';
+import { aiQuiz } from './ai-video.mjs';
 
 export const site = {
   name: 'HYPERCUT',
@@ -20,6 +21,9 @@ export const phases = [
 ];
 
 export const weeks = [...weeks1to4, ...weeks5to8, ...weeks9to12];
+weeks[11].quiz.push(...aiQuiz);
+weeks[11].labs.push('ai-prompt-builder');
+weeks[2].labs.push('ai-prompt-builder');
 
 // Stable lesson IDs used as storage keys: w01-l1 etc.
 export function lessonId(weekN, idx) {
@@ -55,6 +59,7 @@ export const labs = [
   { id: 'export-settings', name: 'Export Settings Generator', icon: '📤', cat: 'Pro Tools', blurb: 'Exact export settings and a ready-to-run FFmpeg command for YouTube, Reels/TikTok, broadcast, masters and podcasts.' },
   { id: 'captions-srt', name: 'Caption & SRT Maker', icon: '💬', cat: 'Pro Tools', blurb: 'Turn a transcript into timed, readable captions, check reading speed, preview them and download .srt or .vtt files.' },
   { id: 'rate-calculator', name: 'Freelance Rate & Quote Calculator', icon: '💰', cat: 'Pro Tools', blurb: 'Work out your day rate from your income goal, and quote projects from editing hours per finished minute.' },
+  { id: 'ai-prompt-builder', name: 'AI Shot Prompt Builder', icon: '🤖', cat: 'AI Video', blurb: 'Write AI video prompts the way a cinematographer describes a shot (size, angle, lens, movement, light, palette, texture), keep a continuity library and copy the result into any generator.', lesson: true },
   { id: 'shot-list', name: 'Shot List Builder', icon: '🎬', cat: 'Pro Tools', blurb: 'Plan coverage shot by shot (size, angle, movement, lens, duration), then save it, print it or export it as CSV.' },
 ];
 site.description = `HYPERCUT: Edit God Mode is a 12-week video editing course from beginner to pro. It covers cinematography, color grading, color theory, sound design, VFX, motion graphics, trending effects, AI tools and how editing engines work, with ${labs.length} interactive labs and tools.`;
@@ -65,6 +70,6 @@ export const faq = [
   ['How much time does it take?', 'About 60–90 minutes a day for 90 days. The built-in 90-day planner tells you exactly what to do each day.'],
   ['Do I need an expensive computer?', 'No. Week 1 teaches proxy workflows so you can edit even heavy 4K footage on modest hardware.'],
   ['Is there a certificate?', 'Yes. Complete every lesson and pass every weekly quiz to unlock a downloadable HYPERCUT certificate on your dashboard.'],
-  ['Does it cover trending effects and AI?', 'Yes. Week 10 covers trending short-form edits, transitions and effects. Week 12 covers AI tools and how they work, with an ethics guide. The Effects Cookbook has 21 step-by-step recipes.'],
+  ['Does it cover trending effects and AI video?', 'Yes. Week 10 covers trending short-form edits, transitions and effects. Week 12 and the AI Video Masterclass cover AI editing tools and AI video generation: how the models work, prompting with shot language, matching AI shots to real footage, and the ethics. The AI Shot Prompt Builder lets you practise.'],
   ['Is my progress saved?', 'Yes. Create a free account and your progress, notes, quiz scores, streaks and badges are saved. They currently live in your browser\'s storage on this device.'],
 ];

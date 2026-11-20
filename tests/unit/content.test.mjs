@@ -12,7 +12,10 @@ import { effects } from '../../src/content/effects.mjs';
 import { glossary } from '../../src/content/glossary.mjs';
 import { resolveSafe } from '../../scripts/serve.mjs';
 import { tools, TOOL_CATEGORIES, buildKit } from '../../src/content/toolkit.mjs';
-import { existsSync } from 'node:fs';
+import { aiLessonNotes, aiChapters } from '../../src/content/ai-video.mjs';
+import { lessonVideos, validateVideo, isoToSeconds } from '../../src/content/videos.mjs';
+import { existsSync, readFileSync } from 'node:fs';
+const readFileSyncUtf8 = (p) => readFileSync(p, 'utf8');
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const DIST = path.join(ROOT, 'dist');
@@ -42,7 +45,7 @@ test('curriculum structure', () => {
 });
 
 test('supporting content', () => {
-  assert.equal(labs.length, 25);
+  assert.equal(labs.length, 26);
   assert.equal(new Set(labs.map((l) => l.id)).size, labs.length, 'unique lab ids');
   for (const l of labs) assert.ok(existsSync(path.join(ROOT, 'src/assets/js/labs', `${l.id}.js`)), `lab script for ${l.id}`);
   const used = new Set(weeks.flatMap((w) => w.labs));
@@ -189,4 +192,53 @@ test('static server blocks path traversal', () => {
   assert.equal(resolveSafe('/%2e%2e/%2e%2e/etc/passwd')?.startsWith(DIST), true);
   assert.equal(resolveSafe('/a%00b'), null);
   assert.equal(resolveSafe('/%E0%A4%A'), null);
+});
+
+test('AI video content is wired correctly', () => {
+  const slugs = new Set(weeks.flatMap((w) => w.lessons.map((l) => l.slug)));
+  for (const k of Object.keys(aiLessonNotes)) assert.ok(slugs.has(k), `AI note targets a real lesson: ${k}`);
+  assert.ok(Object.keys(aiLessonNotes).length >= 15);
+  assert.ok(aiChapters.length >= 7);
+  assert.ok(scenarios.some((s) => s.category === 'ai'));
+  assert.ok(tools.some((t) => t.cat === 'ai'));
+  assert.ok(weeks[11].quiz.length >= 8);
+  for (const c of aiChapters) assert.ok(!/<script|on\w+=|javascript:/i.test(c.body));
+});
+
+test('lesson videos: config, files and validation', () => {
+  for (const [id, v] of Object.entries(lessonVideos)) {
+    assert.deepEqual(validateVideo(id, v), [], id);
+    for (const f of [v.src, v.poster, v.captions, v.fallback?.src].filter(Boolean)) assert.ok(existsSync(path.join(ROOT, 'src/public', f)), `media file exists: ${f}`);
+    if (v.captions) assert.ok(readFileSyncUtf8(path.join(ROOT, 'src/public', v.captions)).startsWith('WEBVTT'));
+    for (const c of v.chapters || []) assert.ok(c.t < isoToSeconds(v.duration));
+  }
+  assert.equal(isoToSeconds('PT1H2M3S'), 3723);
+  assert.equal(isoToSeconds('PT40S'), 40);
+  assert.equal(isoToSeconds('nope'), 0);
+  const ok = { kind: 'youtube', id: 'dQw4w9WgXcQ', title: 't', description: 'd', duration: 'PT1M', uploadDate: '2026-01-01' };
+  assert.deepEqual(validateVideo('w02-l3', ok), []);
+  assert.ok(validateVideo('w13-l1', ok).length, 'bad lesson id');
+  assert.ok(validateVideo('w02-l3', { ...ok, id: 'x"><script>' }).length, 'bad youtube id');
+  assert.ok(validateVideo('w02-l3', { ...ok, kind: 'file', src: 'https://evil.com/x.mp4', type: 'video/mp4' }).length, 'remote file src rejected');
+  assert.ok(validateVideo('w02-l3', { ...ok, kind: 'file', src: '/media/../x.mp4', type: 'video/mp4' }).length, 'path traversal rejected');
+  assert.ok(validateVideo('w02-l3', { ...ok, duration: '2 minutes' }).length);
+  assert.ok(validateVideo('w02-l3', { ...ok, kind: 'vimeo', id: 'abc' }).length);
+});
+
+test('video pages: player, captions, VideoObject, CSP frame-src', async () => {
+  const html = await readFile(path.join(DIST, 'lesson/01-frames-fps-and-motion/index.html'), 'utf8');
+  assert.match(html, /<video controls preload="metadata" playsinline poster="\/media\//);
+  assert.match(html, /<source src="\/media\/w01-l1-frames-shutter\.mp4" type="video\/mp4">\s*<source src="\/media\/w01-l1-frames-shutter\.webm" type="video\/webm">/);
+  assert.match(html, /<track kind="captions" src="\/media\/w01-l1-frames-shutter\.en\.vtt" srclang="en" label="English" default>/);
+  const ld = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1])).find((o) => o['@type'] === 'VideoObject');
+  assert.ok(ld, 'VideoObject present');
+  for (const k of ['name', 'description', 'thumbnailUrl', 'uploadDate', 'duration', 'contentUrl']) assert.ok(ld[k], k);
+  assert.match(ld.contentUrl, /^https:\/\/hypercut\.academy\/media\//);
+  assert.equal(ld.hasPart.length, 4);
+  assert.match(html, /frame-src https:\/\/www\.youtube-nocookie\.com https:\/\/player\.vimeo\.com;/);
+  const ai = await readFile(path.join(DIST, 'ai-video/index.html'), 'utf8');
+  assert.match(ai, /AI Video Masterclass/);
+  const lesson = await readFile(path.join(DIST, 'lesson/03-camera-movement/index.html'), 'utf8');
+  assert.match(lesson, /class="callout ai-note"/);
+  assert.ok((await readFile(path.join(DIST, 'sitemap.xml'), 'utf8')).includes('/ai-video/'));
 });

@@ -151,3 +151,18 @@ test('rates, quotes and CSV safety', () => {
   assert.equal(L.csvCell('a,b'), '"a,b"');
   assert.equal(L.toCSV([['Shot', 'Size'], ['1', 'CU']]), 'Shot,Size\r\n1,CU');
 });
+
+test('AI shot prompt builder', () => {
+  const r = L.buildShotPrompt({ size: 'Medium close-up', angle: 'low-angle', subject: 'a tired boxer', action: 'wrapping her hands', setting: 'empty gym at dawn', lens: '85mm portrait lens, shallow depth of field', move: 'slow dolly in', light: 'Rembrandt lighting, 4:1 contrast', palette: 'muted desaturated palette', texture: 'shot on 35mm film, fine grain, soft halation', mood: 'quiet determination', duration: 6, aspect: '2.39:1' });
+  assert.match(r.prompt, /^Low-angle medium close-up of a tired boxer wrapping her hands, empty gym at dawn\. 85mm/);
+  assert.match(r.prompt, /6 seconds, 2\.39:1, one continuous shot, no cuts\.$/);
+  assert.deepEqual(r.missing, []);
+  assert.equal(r.score, r.max);
+  const bad = L.buildShotPrompt({ size: '<script>', lens: 'fake', subject: 'a\u0000cat\n\nnow', duration: 999, aspect: 'nope', avoid: 'rain, cars' });
+  assert.ok(!bad.prompt.includes('<script>'));
+  assert.match(bad.prompt, /a cat now/);
+  assert.match(bad.prompt, /20 seconds, 16:9/);
+  assert.ok(bad.missing.includes('shot size') && bad.missing.includes('lens'));
+  assert.match(bad.negative, /rain, cars$/);
+  assert.equal(L.buildShotPrompt().missing.length, 6);
+});

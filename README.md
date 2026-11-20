@@ -3,7 +3,9 @@
 A 90-day video editing course website, from first cut to pro.
 
 - **12 weeks, 60 lessons, 62 quiz questions.** Topics in order: how video and editing engines work, NLE mastery, cinematography, editing theory, sound, color theory and science, color grading, motion graphics, VFX, trending effects, genre mastery, AI tools, delivery and the business of editing.
-- **25 interactive labs, lessons and tools:**
+- **AI video throughout:** an AI Video Masterclass (`/ai-video/`, 7 chapters: how generators work, prompting with shot language, consistency, matching AI shots to real footage, workflows, law and ethics), an "AI angle" note in 20 lessons, AI scenarios in the playbook, AI recipes, AI tools in the toolkit, AI glossary terms and quiz questions, plus the **AI Shot Prompt Builder** lab.
+- **Lesson videos:** a built-in player with captions, chapters and Google key-moment deep links (`?t=`), plus click-to-load YouTube and Vimeo embeds. A sample explainer is on Week 1, Lesson 1.
+- **26 interactive labs, lessons and tools:**
   - *Labs:* Color Grading Studio (live waveform, parade, vectorscope, histogram), Color Harmony, Shutter & FPS, Lens & Depth of Field, Composition Grids, Aspect Ratio & Safe Zones, Bitrate & Storage, Timecode (with drop-frame), Easing Curves, Beat Sync, EQ Ear Trainer, Chroma Key, Blend Modes and Shortcut Trainer.
   - *Interactive lessons with auto-checked missions:* Exposure Triangle, White Balance, Three-Point Lighting, Inside the Codec (DCT compression), Trim Tools (ripple, roll, slip, slide) and the Kuleshov Experiment.
   - *Pro tools:* LUFS Loudness Meter (ITU-R BS.1770-4), Export Settings Generator with FFmpeg commands, Caption & SRT Maker, Freelance Rate & Quote Calculator and Shot List Builder.
@@ -14,7 +16,7 @@ A 90-day video editing course website, from first cut to pro.
 ## Run it
 
 ```bash
-npm run build      # generates dist/ (117 pre-rendered pages)
+npm run build      # generates dist/ (119 pre-rendered pages)
 npm run serve      # http://localhost:4173
 ```
 
@@ -23,9 +25,23 @@ No dependencies are needed (Node 20 or later). Set `SITE_URL=https://your-domain
 ## Test
 
 ```bash
-npm test           # 51 unit tests: lab math, loudness, auth/security, progress, content, SEO, links
-npm run test:e2e   # 21 browser tests (Playwright): every page, flows, missions, tools, XSS, mobile, a11y
+npm test           # 55 unit tests: lab math, loudness, AI prompts, videos, auth/security, progress, content, SEO, links
+npm run test:e2e   # 23 browser tests (Playwright): every page, flows, missions, tools, video playback, XSS, mobile, a11y
 ```
+
+## Adding your own (AI-made) tutorial videos
+
+Every lesson can show a video. Edit `src/content/videos.mjs` and add an entry keyed by lesson id (`w03-l2` = Week 3, Lesson 2).
+
+1. **Make the video** with any tool (HeyGen, Synthesia, Veo, Runway, or a screen recording). Export it as H.264 MP4, 1080p, about 5–8 Mbps.
+2. **Choose where it lives:**
+   - *YouTube or Vimeo (recommended for long or many videos):* upload it there, then add `{ kind: 'youtube', id: 'VIDEO_ID', … }` or `{ kind: 'vimeo', id: '123456789', … }`. Nothing loads from YouTube or Vimeo until a learner presses play.
+   - *Self-hosted (short clips):* put the file in `src/public/media/` and add `{ kind: 'file', src: '/media/name.mp4', type: 'video/mp4', poster: '/media/name.jpg', … }`. Optionally add a WebM fallback.
+3. **Add captions:** make a `.vtt` file with the Caption & SRT Maker lab (`/labs/captions-srt/`), save it in `src/public/media/`, and set `captions: '/media/name.en.vtt'`.
+4. **Fill in** `title`, `description`, `duration` (for example `'PT2M30S'`), `uploadDate` (`'2026-11-20'`), optional `chapters: [{ t: 0, label: 'Intro' }]`, and `ai: true` if the video is AI-generated. A visible "AI-generated video" label is shown, as platforms and good practice require.
+5. Run `npm test` (it validates every entry and checks the files exist), commit, and push. Vercel redeploys automatically.
+
+The build adds `VideoObject` structured data, with chapters as key moments, so lessons can appear in Google video results. Regenerate the sample video with `node scripts/gen-sample-video.mjs`.
 
 ## Deploy
 

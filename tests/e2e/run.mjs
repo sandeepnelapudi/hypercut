@@ -321,7 +321,7 @@ await t('labs respond to input', async () => {
   const pw = key.replace('Ctrl+', 'Control+').replace(/^Space$/, ' ').replace('ArrowDown', 'ArrowDown');
   await page.keyboard.press(pw === ' ' ? 'Space' : pw);
   await page.waitForSelector('.key-display:not(:text("' + action.replace(/"/g, '\\"') + '"))');
-  for (const lab of ['easing', 'chroma-key', 'blend-modes', 'composition', 'aspect-safe-zones', 'color-harmony', 'shutter-fps', 'bitrate-calculator', 'eq-trainer', 'exposure-triangle', 'white-balance', 'lighting', 'compression', 'trim-tools', 'kuleshov', 'export-settings', 'captions-srt', 'rate-calculator', 'shot-list', 'loudness-meter']) {
+  for (const lab of ['easing', 'chroma-key', 'blend-modes', 'composition', 'aspect-safe-zones', 'color-harmony', 'shutter-fps', 'bitrate-calculator', 'eq-trainer', 'exposure-triangle', 'white-balance', 'lighting', 'compression', 'trim-tools', 'kuleshov', 'export-settings', 'captions-srt', 'rate-calculator', 'shot-list', 'loudness-meter', 'ai-prompt-builder']) {
     await page.goto(`/labs/${lab}/`);
     await page.waitForSelector('#lab-root > *:not(.lab-loading)');
     const r = page.locator('#lab-root input[type=range]').first();
@@ -347,7 +347,7 @@ await t('image upload in lab rejects non-images and accepts PNG', async () => {
 
 await t('mobile: no horizontal overflow, nav toggle works', async () => {
   const { ctx, page } = await newPage({ viewport: { width: 360, height: 740 }, isMobile: true, hasTouch: true });
-  for (const p of ['/toolkit/', '/labs/trim-tools/', '/labs/shot-list/', '/labs/captions-srt/', '/labs/exposure-triangle/', '/labs/lighting/', '/', '/curriculum/', '/lesson/06-color-spaces-gamma-log/', '/labs/color-grading/', '/playbook/', '/software/', '/effects/', '/engine/', '/planner/', '/signup/', '/labs/aspect-safe-zones/', '/labs/timecode/', '/week/07-color-grading/']) {
+  for (const p of ['/ai-video/', '/labs/ai-prompt-builder/', '/lesson/01-frames-fps-and-motion/', '/toolkit/', '/labs/trim-tools/', '/labs/shot-list/', '/labs/captions-srt/', '/labs/exposure-triangle/', '/labs/lighting/', '/', '/curriculum/', '/lesson/06-color-spaces-gamma-log/', '/labs/color-grading/', '/playbook/', '/software/', '/effects/', '/engine/', '/planner/', '/signup/', '/labs/aspect-safe-zones/', '/labs/timecode/', '/week/07-color-grading/']) {
     await page.goto(p);
     await page.waitForTimeout(150);
     const [sw, iw] = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
@@ -376,7 +376,7 @@ await t('theme toggle persists; keyboard "/" opens search', async () => {
 
 await t('accessibility basics: labels, alt, landmarks, lang', async () => {
   const { ctx, page } = await newPage();
-  for (const p of ['/toolkit/', '/labs/shot-list/', '/labs/trim-tools/', '/labs/exposure-triangle/', '/labs/captions-srt/', '/', '/signup/', '/labs/color-grading/', '/labs/chroma-key/', '/lesson/01-frames-fps-and-motion/', '/week/01-how-video-works/', '/flashcards/']) {
+  for (const p of ['/ai-video/', '/labs/ai-prompt-builder/', '/lesson/01-frames-fps-and-motion/', '/toolkit/', '/labs/shot-list/', '/labs/trim-tools/', '/labs/exposure-triangle/', '/labs/captions-srt/', '/', '/signup/', '/labs/color-grading/', '/labs/chroma-key/', '/lesson/01-frames-fps-and-motion/', '/week/01-how-video-works/', '/flashcards/']) {
     await page.goto(p);
     await page.waitForTimeout(200);
     const issues = await page.evaluate(() => {
@@ -525,6 +525,72 @@ await t('toolkit: kit builder filters and ownership persists', async () => {
   assert.ok(await page.isChecked('[data-have="mediainfo"]'));
   assert.equal(await page.locator('.tool-card a[target=_blank]:not([rel*="noopener"])').count(), 0);
   noErrors(page, 'toolkit');
+  await ctx.close();
+});
+
+await t('lesson video: plays, captions, chapters, ?t= deep link, range requests', async () => {
+  const r = await fetch(BASE + '/media/w01-l1-frames-shutter.webm', { headers: { Range: 'bytes=0-99' } });
+  assert.equal(r.status, 206); assert.equal((await r.arrayBuffer()).byteLength, 100);
+  assert.match(r.headers.get('content-range'), /^bytes 0-99\/\d+$/);
+  const { ctx, page } = await newPage();
+  await page.goto('/lesson/01-frames-fps-and-motion/');
+  const v = page.locator('.lesson-video video');
+  await v.evaluate((el) => { el.muted = true; return el.play(); });
+  await page.waitForFunction(() => document.querySelector('.lesson-video video').currentTime > 0.5, null, { timeout: 15000 });
+  const cues = await v.evaluate((el) => { const tt = el.textTracks[0]; tt.mode = 'hidden'; return new Promise((res) => setTimeout(() => res(tt.cues ? tt.cues.length : 0), 800)); });
+  assert.ok(cues >= 6, `captions loaded (${cues} cues)`);
+  await page.click('.chapters button:has-text("Shutter angle")');
+  await page.waitForFunction(() => Math.abs(document.querySelector('.lesson-video video').currentTime - 20) < 2);
+  await page.goto('/lesson/01-frames-fps-and-motion/?t=32');
+  await page.waitForFunction(() => document.querySelector('.lesson-video video').currentTime >= 31.5, null, { timeout: 15000 });
+  // Embed facade: nothing loads until click; then a sandbox-friendly iframe appears.
+  let embedRequests = 0;
+  await page.route(/youtube-nocookie\.com|vimeo\.com/, (route) => { embedRequests++; route.abort(); });
+  await page.evaluate(async () => {
+    const f = document.createElement('div');
+    f.className = 'video-facade'; f.dataset.embedKind = 'youtube'; f.dataset.embedId = 'dQw4w9WgXcQ'; f.dataset.embedTitle = 'Test';
+    const b = document.createElement('button'); b.className = 'video-play'; b.type = 'button'; b.textContent = '▶'; f.append(b);
+    const bad = f.cloneNode(true); bad.dataset.embedId = 'x"><script>'; bad.id = 'bad-facade';
+    document.querySelector('.lesson').prepend(f, bad);
+    await import('/assets/js/pages/lesson.js?facade-test');
+  });
+  await page.waitForTimeout(300);
+  assert.equal(embedRequests, 0, 'no third-party request before click');
+  await page.click('.video-facade:not(#bad-facade) .video-play');
+  const src = await page.getAttribute('iframe[title="Test"]', 'src');
+  assert.equal(src, 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0&modestbranding=1');
+  await page.click('#bad-facade .video-play');
+  assert.equal(await page.locator('iframe').count(), 1, 'invalid id never becomes an iframe');
+  page.errors = page.errors.filter((e) => !/youtube|ERR_FAILED|Failed to load resource/i.test(e));
+  noErrors(page, 'video');
+  await ctx.close();
+});
+
+await t('AI prompt builder: missions, library persistence, masterclass', async () => {
+  const { ctx, page } = await newPage();
+  await page.goto('/labs/ai-prompt-builder/');
+  await page.waitForSelector('.mission-list');
+  await page.fill('#ai-subject', 'a young chef with a red bandana');
+  await page.fill('#ai-action', 'flips vegetables in a flaming wok');
+  const sel = (i) => page.locator('#lab-root .lab-controls select').nth(i);
+  await sel(0).selectOption('Close-up');
+  await sel(2).selectOption('85mm portrait lens, shallow depth of field');
+  await sel(3).selectOption('slow dolly in');
+  await page.waitForSelector('.mission.done:has-text("Speak camera")');
+  await sel(4).selectOption('neon signs, mixed color light');
+  await sel(5).selectOption('teal and orange grade');
+  await sel(6).selectOption('shot on 35mm film, fine grain, soft halation');
+  await page.waitForSelector('.mission.done:has-text("Light it like a DP")');
+  const prompt = await page.textContent('#lab-root pre code');
+  assert.match(prompt, /^Close-up of a young chef with a red bandana flips vegetables/);
+  for (const size of ['Wide shot', 'Medium shot', 'Close-up']) { await sel(0).selectOption(size); await page.click('text=Save to my continuity library'); }
+  await page.waitForSelector('.mission.done:has-text("Build a consistent sequence")');
+  await page.reload();
+  await page.waitForSelector('h2:has-text("My continuity library (3)")');
+  await page.goto('/ai-video/');
+  await page.waitForSelector('#prompting');
+  assert.ok(await page.locator('a[href="/labs/ai-prompt-builder/"]').count() >= 1);
+  noErrors(page, 'ai');
   await ctx.close();
 });
 

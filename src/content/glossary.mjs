@@ -1,3 +1,4 @@
+import { aiGlossary } from './ai-video.mjs';
 // Glossary — also powers the flashcard trainer.
 export const glossary = [
   ['A-roll', 'The primary footage, typically interviews or main dialogue, that carries the story.'],
@@ -85,3 +86,4 @@ export const glossary = [
   ['Waveform monitor', 'A scope showing luminance across the image horizontally.'],
   ['White balance', 'Calibrating so that white objects appear neutral under a given light.'],
 ];
+glossary.push(...aiGlossary);

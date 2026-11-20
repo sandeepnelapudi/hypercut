@@ -1,3 +1,4 @@
+import { aiTools } from './ai-video.mjs';
 // The editor's toolkit: real tools working editors rely on.
 // tier: essential | recommended | pro   price: free | freemium | paid | subscription
 // focus tags drive the kit builder: all | social | events | film | commercial | color | vfx | audio | doc
@@ -8,6 +9,7 @@ export const TOOL_CATEGORIES = [
   ['vfx', 'VFX, motion & plugins', 'Tracking, cleanup, noise reduction and effects.'],
   ['workflow', 'Review & collaboration', 'Get feedback and work with clients and teams.'],
   ['assets', 'Assets & licensing', 'Music, SFX, footage and fonts you can legally use.'],
+  ['ai', 'AI video tools', 'Generate, dub, enhance and verify synthetic media, responsibly.'],
   ['hardware', 'Hardware', 'The physical kit that makes editing fast and accurate.'],
 ];
 
@@ -63,6 +65,7 @@ export const FOCUSES = [
   ['all', 'All-round editor'], ['social', 'YouTube & short-form'], ['events', 'Weddings & events'], ['film', 'Narrative film'],
   ['commercial', 'Commercials & agency'], ['color', 'Colorist'], ['vfx', 'VFX & motion'], ['audio', 'Audio-heavy (podcasts, doc)'], ['doc', 'Documentary'],
 ];
+tools.push(...aiTools);
 import { inKit } from '../assets/js/core/kit.js';
 export function buildKit(budget, focus, list = tools) {
   return list.filter((t) => inKit(t, budget, focus));
