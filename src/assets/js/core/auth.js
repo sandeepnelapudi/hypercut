@@ -219,6 +219,7 @@ export async function deleteAccount(password) {
   if (!(await verifyPassword(u, password))) throw new AuthError('Password is incorrect.', 'invalid_credentials');
   const db = getDB();
   await db.delete('progress', u.id);
+  await db.delete('tools', `shotlist-${u.id}`);
   await db.delete('emails', await emailKey(u.email));
   await db.delete('users', u.id);
   // Remove all sessions for this user

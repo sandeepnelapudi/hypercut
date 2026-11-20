@@ -13,7 +13,7 @@ export const QUIZ_PASS = 0.8;
 const has = (o, k) => o != null && Object.prototype.hasOwnProperty.call(o, k);
 
 export function emptyProgress() {
-  return { v: 1, lessons: {}, quizzes: {}, notes: {}, bookmarks: {}, labs: {}, projects: {}, plan: {}, cards: {}, activity: {}, updatedAt: 0 };
+  return { v: 1, lessons: {}, quizzes: {}, notes: {}, bookmarks: {}, labs: {}, projects: {}, plan: {}, kit: {}, cards: {}, activity: {}, updatedAt: 0 };
 }
 
 // Coerce whatever is in storage into a well-formed progress object.
@@ -21,7 +21,7 @@ export function sanitiseProgress(raw) {
   const p = emptyProgress();
   if (!raw || typeof raw !== 'object') return p;
   const mapTs = (src, dst) => { if (src && typeof src === 'object') for (const [k, v] of Object.entries(src)) if (ID_RE.test(k) && Number.isFinite(v)) dst[k] = v; };
-  mapTs(raw.lessons, p.lessons); mapTs(raw.bookmarks, p.bookmarks); mapTs(raw.labs, p.labs); mapTs(raw.projects, p.projects); mapTs(raw.plan, p.plan);
+  mapTs(raw.lessons, p.lessons); mapTs(raw.bookmarks, p.bookmarks); mapTs(raw.labs, p.labs); mapTs(raw.projects, p.projects); mapTs(raw.plan, p.plan); mapTs(raw.kit, p.kit);
   if (raw.quizzes && typeof raw.quizzes === 'object') for (const [k, q] of Object.entries(raw.quizzes)) {
     if (ID_RE.test(k) && q && Number.isFinite(q.best) && Number.isFinite(q.total) && q.total > 0) p.quizzes[k] = { best: Math.max(0, Math.min(q.best, q.total)), total: q.total, at: Number(q.at) || 0 };
   }
@@ -77,6 +77,7 @@ export const setLessonComplete = (id, done = true) => updateProgress((p) => { ch
 export const toggleBookmark = (id) => updateProgress((p) => { checkId(id); if (has(p.bookmarks, id)) { delete p.bookmarks[id]; return false; } p.bookmarks[id] = Date.now(); return true; }, { activity: false });
 export const visitLab = (id) => updateProgress((p) => { checkId(id); const first = !has(p.labs, id); if (first) p.labs[id] = Date.now(); return first; });
 export const toggleProject = (id) => updateProgress((p) => { checkId(id); if (has(p.projects, id)) { delete p.projects[id]; return false; } p.projects[id] = Date.now(); return true; });
+export const toggleKit = (id) => updateProgress((p) => { checkId(id); if (has(p.kit, id)) { delete p.kit[id]; return false; } p.kit[id] = Date.now(); return true; }, { activity: false });
 export const togglePlanDay = (day) => updateProgress((p) => { const k = String(day); checkId(k); if (has(p.plan, k)) { delete p.plan[k]; return false; } p.plan[k] = Date.now(); return true; });
 export function saveNote(id, text) {
   return updateProgress((p) => {
@@ -113,7 +114,7 @@ export function reviewCard(id, knew) {
 export function mergeProgress(a, b) {
   const out = sanitiseProgress(a);
   const src = sanitiseProgress(b);
-  for (const key of ['lessons', 'bookmarks', 'labs', 'projects', 'plan']) for (const [k, v] of Object.entries(src[key])) if (!has(out[key], k)) out[key][k] = v;
+  for (const key of ['lessons', 'bookmarks', 'labs', 'projects', 'plan', 'kit']) for (const [k, v] of Object.entries(src[key])) if (!has(out[key], k)) out[key][k] = v;
   for (const [k, q] of Object.entries(src.quizzes)) if (!has(out.quizzes, k) || q.best / q.total > out.quizzes[k].best / out.quizzes[k].total) out.quizzes[k] = q;
   for (const [k, n] of Object.entries(src.notes)) if (!has(out.notes, k)) out.notes[k] = n; else if (n.text !== out.notes[k].text) out.notes[k] = { text: (out.notes[k].text + '\n\n' + n.text).slice(0, NOTE_MAX), at: Math.max(n.at, out.notes[k].at) };
   for (const [k, c] of Object.entries(src.cards)) if (!has(out.cards, k) || c.box > out.cards[k].box) out.cards[k] = c;
@@ -124,6 +125,9 @@ export function mergeProgress(a, b) {
 
 export async function migrateGuestTo(userId) {
   const db = getDB();
+  // Carry over a guest shot list if the account doesn't have one yet.
+  const gs = await db.get('tools', 'shotlist-guest');
+  if (gs && !(await db.get('tools', `shotlist-${userId}`))) { await db.put('tools', `shotlist-${userId}`, gs); await db.delete('tools', 'shotlist-guest'); }
   const guest = await db.get('progress', GUEST_ID);
   if (!guest) return false;
   const mine = await db.get('progress', userId);

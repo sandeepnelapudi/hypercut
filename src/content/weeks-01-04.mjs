@@ -14,7 +14,7 @@ export const weeks1to4 = [
       'Build a proxy workflow for heavy camera files',
       'Describe how an NLE decodes, caches and plays back a timeline',
     ],
-    labs: ['shutter-fps', 'bitrate-calculator', 'timecode'],
+    labs: ['shutter-fps', 'bitrate-calculator', 'timecode', 'compression'],
     project: {
       title: 'Technical Spec Sheet',
       brief: 'Shoot 10 short clips on any camera or phone at different frame rates and resolutions. Inspect each with MediaInfo and fill a spec sheet: codec, container, bitrate, bit depth, chroma subsampling, GOP type, color space.',
@@ -184,7 +184,7 @@ export const weeks1to4 = [
       'Compare the major NLEs and choose the right one for a project',
       'Set up a professional workspace and custom shortcuts',
     ],
-    labs: ['shortcut-trainer'],
+    labs: ['shortcut-trainer', 'trim-tools'],
     project: {
       title: 'The 60-Second Speed Cut',
       brief: 'Download any free stock footage pack (10–20 clips) and a music track. Cut a 60-second montage using only the keyboard. Screen-record yourself. Repeat it on day 7 and compare the time taken.',
@@ -322,7 +322,7 @@ export const weeks1to4 = [
       'Apply the 180° and 30° rules and screen direction',
       'Read lighting: key, fill, back, contrast ratio, motivated light',
     ],
-    labs: ['dof-lens', 'composition', 'aspect-safe-zones'],
+    labs: ['dof-lens', 'composition', 'aspect-safe-zones', 'exposure-triangle', 'white-balance', 'lighting', 'shot-list'],
     project: {
       title: 'The Shot Library',
       brief: 'Shoot a 15-shot coverage of a simple action (making coffee): wide, medium, close-up, extreme close-up, insert, OTS, low angle, high angle, dolly-in, pan, tilt, handheld, locked-off, silhouette, rack focus. Label each and cut a 45-second sequence.',
@@ -477,7 +477,7 @@ export const weeks1to4 = [
       'Apply Eisenstein\'s five methods of montage',
       'Control rhythm, pacing and tension',
     ],
-    labs: ['beat-sync'],
+    labs: ['beat-sync', 'kuleshov', 'trim-tools'],
     project: {
       title: 'Same Footage, Three Films',
       brief: 'Using the same 3 minutes of footage, cut three 30-second edits: one comedy, one thriller, one romance. Only editing, music and sound may change.',

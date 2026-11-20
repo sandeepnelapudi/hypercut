@@ -6,7 +6,7 @@ export const site = {
   name: 'HYPERCUT',
   fullName: 'HYPERCUT: Edit God Mode',
   tagline: '90 days from first cut to edit god mode.',
-  description: 'HYPERCUT: Edit God Mode is a 12-week video editing course from beginner to pro. It covers cinematography, color grading, color theory, sound design, VFX, motion graphics, trending effects, AI tools and how editing engines work, with 14 interactive labs.',
+  description: '',
   url: (process.env.SITE_URL || 'https://hypercut.academy').replace(/\/+$/, ''),
   locale: 'en_US',
   twitter: '@hypercutacademy',
@@ -43,7 +43,21 @@ export const labs = [
   { id: 'chroma-key', name: 'Chroma Key Lab', icon: '🟩', cat: 'VFX', blurb: 'Pull a green-screen key with tolerance, softness and spill suppression and see the matte.' },
   { id: 'blend-modes', name: 'Blend Mode Explorer', icon: '🧪', cat: 'VFX', blurb: 'See every blend mode in action and learn the math behind them.' },
   { id: 'shortcut-trainer', name: 'Shortcut Speed Trainer', icon: '⌨️', cat: 'Speed', blurb: 'Drill the essential keyboard shortcuts for Premiere Pro, DaVinci Resolve and Final Cut Pro.' },
+  // Interactive lessons with auto-checked missions
+  { id: 'exposure-triangle', name: 'Exposure Triangle Simulator', icon: '📷', cat: 'Camera', blurb: 'Balance aperture, shutter, ISO and ND filters to expose real scenarios while keeping the 180° rule. Includes auto-checked missions.', lesson: true },
+  { id: 'white-balance', name: 'White Balance Lab', icon: '🌡️', cat: 'Color', blurb: 'Neutralise tungsten, daylight and mystery light sources by eye and with a grey-card eyedropper.', lesson: true },
+  { id: 'lighting', name: 'Three-Point Lighting Studio', icon: '💡', cat: 'Camera', blurb: 'Place key, fill, rim and background lights, read the key:fill ratio, and recreate Rembrandt, butterfly, split and noir lighting.', lesson: true },
+  { id: 'compression', name: 'Inside the Codec: Compression Visualizer', icon: '🧊', cat: 'Technical', blurb: 'Watch the real DCT, quantization and chroma subsampling pipeline crush an image, block by block.', lesson: true },
+  { id: 'trim-tools', name: 'Trim Tools Simulator', icon: '✂️', cat: 'Editing', blurb: 'Master ripple, roll, slip and slide on a live timeline with source handles. Includes four auto-checked missions.', lesson: true },
+  { id: 'kuleshov', name: 'The Kuleshov Experiment', icon: '🎭', cat: 'Editing', blurb: 'Recreate the famous experiment: the same face reads as hunger, grief or joy depending on the shot in between.', lesson: true },
+  // Pro tools
+  { id: 'loudness-meter', name: 'Loudness Meter (LUFS)', icon: '🔊', cat: 'Pro Tools', blurb: 'Measure the integrated loudness of your own audio or video file with ITU-R BS.1770, and get the gain needed for YouTube, podcasts or broadcast.' },
+  { id: 'export-settings', name: 'Export Settings Generator', icon: '📤', cat: 'Pro Tools', blurb: 'Exact export settings and a ready-to-run FFmpeg command for YouTube, Reels/TikTok, broadcast, masters and podcasts.' },
+  { id: 'captions-srt', name: 'Caption & SRT Maker', icon: '💬', cat: 'Pro Tools', blurb: 'Turn a transcript into timed, readable captions, check reading speed, preview them and download .srt or .vtt files.' },
+  { id: 'rate-calculator', name: 'Freelance Rate & Quote Calculator', icon: '💰', cat: 'Pro Tools', blurb: 'Work out your day rate from your income goal, and quote projects from editing hours per finished minute.' },
+  { id: 'shot-list', name: 'Shot List Builder', icon: '🎬', cat: 'Pro Tools', blurb: 'Plan coverage shot by shot (size, angle, movement, lens, duration), then save it, print it or export it as CSV.' },
 ];
+site.description = `HYPERCUT: Edit God Mode is a 12-week video editing course from beginner to pro. It covers cinematography, color grading, color theory, sound design, VFX, motion graphics, trending effects, AI tools and how editing engines work, with ${labs.length} interactive labs and tools.`;
 
 export const faq = [
   ['Who is HYPERCUT for?', 'Complete beginners, self-taught editors with gaps, and working editors who want to go pro in color, sound, VFX and story. No prior experience is required.'],

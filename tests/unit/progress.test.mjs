@@ -135,3 +135,24 @@ test('mergeProgress keeps best of both', () => {
   assert.match(m.notes['w01-l1'].text, /mine[\s\S]*guest/);
   assert.equal(m.lessons['w01-l2'], 5);
 });
+
+test('toolkit ownership toggles and survives sanitising', async () => {
+  assert.equal(await P.toggleKit('mediainfo'), true);
+  assert.equal(await P.toggleKit('ffmpeg'), true);
+  assert.equal(await P.toggleKit('mediainfo'), false);
+  const p = await P.loadProgress();
+  assert.deepEqual(Object.keys(p.kit), ['ffmpeg']);
+  await assert.rejects(P.toggleKit('__proto__'));
+  assert.deepEqual(Object.keys(P.sanitiseProgress({ kit: { ok: 1, 'bad id': 2, constructor: 3 } }).kit), ['ok']);
+});
+
+test('guest shot list moves to the new account; deleting the account removes it', async () => {
+  await db.put('tools', 'shotlist-guest', { v: 1, rows: [{ scene: '1' }] });
+  await P.setLessonComplete('w01-l1', true);
+  const u = await auth.register({ name: 'Dee Planner', email: 'dee@example.com', password: 'Coverage99' });
+  await P.migrateGuestTo(u.id);
+  assert.equal(await db.get('tools', 'shotlist-guest'), null);
+  assert.deepEqual((await db.get('tools', `shotlist-${u.id}`)).rows, [{ scene: '1' }]);
+  await auth.deleteAccount('Coverage99');
+  assert.equal(await db.get('tools', `shotlist-${u.id}`), null);
+});

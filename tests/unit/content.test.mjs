@@ -11,6 +11,8 @@ import { software } from '../../src/content/software.mjs';
 import { effects } from '../../src/content/effects.mjs';
 import { glossary } from '../../src/content/glossary.mjs';
 import { resolveSafe } from '../../scripts/serve.mjs';
+import { tools, TOOL_CATEGORIES, buildKit } from '../../src/content/toolkit.mjs';
+import { existsSync } from 'node:fs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const DIST = path.join(ROOT, 'dist');
@@ -40,7 +42,28 @@ test('curriculum structure', () => {
 });
 
 test('supporting content', () => {
-  assert.equal(labs.length, 14);
+  assert.equal(labs.length, 25);
+  assert.equal(new Set(labs.map((l) => l.id)).size, labs.length, 'unique lab ids');
+  for (const l of labs) assert.ok(existsSync(path.join(ROOT, 'src/assets/js/labs', `${l.id}.js`)), `lab script for ${l.id}`);
+  const used = new Set(weeks.flatMap((w) => w.labs));
+  for (const l of labs) assert.ok(used.has(l.id), `${l.id} is used in at least one week`);
+  // Toolkit
+  assert.ok(tools.length >= 30);
+  assert.equal(new Set(tools.map((t) => t.id)).size, tools.length, 'unique tool ids');
+  for (const t of tools) {
+    assert.match(t.id, /^[a-z0-9-]{1,40}$/);
+    assert.ok(TOOL_CATEGORIES.some(([c]) => c === t.cat), t.id);
+    assert.ok(['essential', 'recommended', 'pro'].includes(t.tier) && ['free', 'freemium', 'paid', 'subscription'].includes(t.price), t.id);
+    assert.ok(!t.url || /^https:\/\/[a-z0-9.-]+\.[a-z]{2,}(\/|$)/.test(t.url), `https url for ${t.id}`);
+    assert.ok(t.week >= 1 && t.week <= 12 && t.what && t.why);
+  }
+  const zero = buildKit('zero', 'all');
+  assert.ok(zero.every((t) => t.price === 'free' || (t.price === 'freemium' && t.tier === 'essential')));
+  assert.ok(zero.length >= 5);
+  assert.ok(buildKit('starter', 'vfx').every((t) => t.tier !== 'pro'));
+  assert.ok(buildKit('pro', 'color').some((t) => t.id === 'refmonitor'));
+  assert.ok(buildKit('pro', 'color').length > buildKit('starter', 'color').length);
+  for (const t of tools.filter((x) => x.tier === 'essential')) assert.ok(buildKit('pro', 'vfx').includes(t), 'essentials always included');
   assert.ok(scenarios.length >= 25);
   const ids = new Set(scenarios.map((s) => s.id));
   assert.equal(ids.size, scenarios.length, 'unique scenario ids');

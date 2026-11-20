@@ -321,7 +321,7 @@ await t('labs respond to input', async () => {
   const pw = key.replace('Ctrl+', 'Control+').replace(/^Space$/, ' ').replace('ArrowDown', 'ArrowDown');
   await page.keyboard.press(pw === ' ' ? 'Space' : pw);
   await page.waitForSelector('.key-display:not(:text("' + action.replace(/"/g, '\\"') + '"))');
-  for (const lab of ['easing', 'chroma-key', 'blend-modes', 'composition', 'aspect-safe-zones', 'color-harmony', 'shutter-fps', 'bitrate-calculator', 'eq-trainer']) {
+  for (const lab of ['easing', 'chroma-key', 'blend-modes', 'composition', 'aspect-safe-zones', 'color-harmony', 'shutter-fps', 'bitrate-calculator', 'eq-trainer', 'exposure-triangle', 'white-balance', 'lighting', 'compression', 'trim-tools', 'kuleshov', 'export-settings', 'captions-srt', 'rate-calculator', 'shot-list', 'loudness-meter']) {
     await page.goto(`/labs/${lab}/`);
     await page.waitForSelector('#lab-root > *:not(.lab-loading)');
     const r = page.locator('#lab-root input[type=range]').first();
@@ -347,7 +347,7 @@ await t('image upload in lab rejects non-images and accepts PNG', async () => {
 
 await t('mobile: no horizontal overflow, nav toggle works', async () => {
   const { ctx, page } = await newPage({ viewport: { width: 360, height: 740 }, isMobile: true, hasTouch: true });
-  for (const p of ['/', '/curriculum/', '/lesson/06-color-spaces-gamma-log/', '/labs/color-grading/', '/playbook/', '/software/', '/effects/', '/engine/', '/planner/', '/signup/', '/labs/aspect-safe-zones/', '/labs/timecode/', '/week/07-color-grading/']) {
+  for (const p of ['/toolkit/', '/labs/trim-tools/', '/labs/shot-list/', '/labs/captions-srt/', '/labs/exposure-triangle/', '/labs/lighting/', '/', '/curriculum/', '/lesson/06-color-spaces-gamma-log/', '/labs/color-grading/', '/playbook/', '/software/', '/effects/', '/engine/', '/planner/', '/signup/', '/labs/aspect-safe-zones/', '/labs/timecode/', '/week/07-color-grading/']) {
     await page.goto(p);
     await page.waitForTimeout(150);
     const [sw, iw] = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
@@ -376,7 +376,7 @@ await t('theme toggle persists; keyboard "/" opens search', async () => {
 
 await t('accessibility basics: labels, alt, landmarks, lang', async () => {
   const { ctx, page } = await newPage();
-  for (const p of ['/', '/signup/', '/labs/color-grading/', '/labs/chroma-key/', '/lesson/01-frames-fps-and-motion/', '/week/01-how-video-works/', '/flashcards/']) {
+  for (const p of ['/toolkit/', '/labs/shot-list/', '/labs/trim-tools/', '/labs/exposure-triangle/', '/labs/captions-srt/', '/', '/signup/', '/labs/color-grading/', '/labs/chroma-key/', '/lesson/01-frames-fps-and-motion/', '/week/01-how-video-works/', '/flashcards/']) {
     await page.goto(p);
     await page.waitForTimeout(200);
     const issues = await page.evaluate(() => {
@@ -393,6 +393,138 @@ await t('accessibility basics: labels, alt, landmarks, lang', async () => {
     });
     assert.deepEqual(issues, [], p);
   }
+  await ctx.close();
+});
+
+await t('interactive lessons: missions complete when solved', async () => {
+  const { ctx, page } = await newPage();
+  // Trim tools: ripple 12 frames off B's end
+  await page.goto('/labs/trim-tools/');
+  await page.waitForSelector('.mission-list');
+  assert.match(await page.textContent('.missions [role=status]'), /0\/4/);
+  await page.click('button:text-is("-10f")'); await page.click('button:text-is("-1f")'); await page.click('button:text-is("-1f")');
+  await page.waitForSelector('.mission.done:has-text("Ripple: tighten clip B")');
+  // Slip
+  await page.click('button:text-is("Reset")');
+  await page.selectOption('#lab-root select >> nth=0', 'slip');
+  await page.click('button:text-is("+10f")');
+  await page.waitForSelector('.mission.done:has-text("Slip")');
+  // Slide blocked case gives feedback, then success
+  await page.click('button:text-is("Reset")');
+  await page.selectOption('#lab-root select >> nth=0', 'slide');
+  await page.click('button:text-is("-1f")');
+  for (let i = 0; i < 5; i++) await page.click('button:text-is("-1f")');
+  await page.waitForSelector('.mission.done:has-text("Slide")');
+  // Exposure: mission 1 needs an ND filter
+  await page.goto('/labs/exposure-triangle/');
+  await page.click('.mission:has-text("Cinematic in bright sun") button');
+  await page.selectOption('#lab-root select >> nth=3', '2'); // aperture f/2.8
+  await page.waitForSelector('.warn-text:has-text("Overexposed")');
+  await page.selectOption('#lab-root select >> nth=5', '6'); // ND64 (6 stops)
+  await page.waitForSelector('.mission.done:has-text("Cinematic in bright sun")');
+  // Lighting: noir mission via sliders
+  await page.goto('/labs/lighting/');
+  await page.click('button.chip:text("Film noir")');
+  await page.waitForTimeout(150);
+  const az = page.locator('#lab-root input[type=range] >> nth=0');
+  await az.evaluate((el) => { el.value = '90'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+  await page.waitForSelector('.mission.done:has-text("Noir split light")');
+  // White balance: fix tungsten by eye
+  await page.goto('/labs/white-balance/');
+  const wb = page.locator('#lab-root input[type=range] >> nth=0');
+  await wb.evaluate((el) => { el.value = '3200'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+  await page.waitForSelector('.mission.done:has-text("Fix the classic mistake")');
+  await page.waitForSelector('.key-display:has-text("Neutral")');
+  // Compression: blocks mission
+  await page.goto('/labs/compression/');
+  await page.check('#grid-cb');
+  const q = page.locator('#lab-root input[type=range] >> nth=0');
+  await q.evaluate((el) => { el.value = '5'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+  await page.waitForSelector('.mission.done:has-text("See the 8×8 blocks")');
+  // Kuleshov: three shots → reveal (shortened hold)
+  await page.goto('/labs/kuleshov/');
+  for (const [i, shot] of ['soup', 'coffin', 'balloon'].entries()) {
+    await page.click(`button.chip:has-text("${shot}")`);
+    await page.waitForSelector('.answers button', { timeout: 15000 });
+    await page.click(`.answers button >> nth=${i}`);
+  }
+  await page.waitForSelector('text=The reveal');
+  noErrors(page, 'missions');
+  await ctx.close();
+});
+
+await t('pro tools: loudness meter, export settings, captions, rates, shot list', async () => {
+  const { ctx, page } = await newPage({ acceptDownloads: true });
+  await page.goto('/labs/loudness-meter/');
+  await page.click('text=Test tone');
+  await page.waitForSelector('#lab-root .v:has-text("LUFS")');
+  const lufs = Number((await page.textContent('#lab-root .result-grid .v >> nth=0')).replace(/[^\d.-]/g, ''));
+  assert.ok(Math.abs(lufs - -20) <= 0.1, `test tone reads ${lufs}`);
+  await page.waitForSelector('.callout:has-text("+6.0 dB")');
+  // Real file upload: generate a 3 s mono 997 Hz WAV at −20 dBFS → −23.0 LUFS
+  const fs = 48000, n = fs * 3, buf = Buffer.alloc(44 + n * 2);
+  buf.write('RIFF', 0); buf.writeUInt32LE(36 + n * 2, 4); buf.write('WAVEfmt ', 8); buf.writeUInt32LE(16, 16); buf.writeUInt16LE(1, 20); buf.writeUInt16LE(1, 22); buf.writeUInt32LE(fs, 24); buf.writeUInt32LE(fs * 2, 28); buf.writeUInt16LE(2, 32); buf.writeUInt16LE(16, 34); buf.write('data', 36); buf.writeUInt32LE(n * 2, 40);
+  for (let i = 0; i < n; i++) buf.writeInt16LE(Math.round(0.1 * 32767 * Math.sin((2 * Math.PI * 997 * i) / fs)), 44 + i * 2);
+  await page.setInputFiles('#lab-root input[type=file]', { name: 'tone.wav', mimeType: 'audio/wav', buffer: buf });
+  await page.waitForSelector('[role=status]:has-text("tone.wav: 1 channel")', { timeout: 15000 });
+  const lufs2 = Number((await page.textContent('#lab-root .result-grid .v >> nth=0')).replace(/[^\d.-]/g, ''));
+  assert.ok(Math.abs(lufs2 - -23.0) <= 0.15, `wav reads ${lufs2}`);
+  await page.setInputFiles('#lab-root input[type=file]', { name: 'x.txt', mimeType: 'text/plain', buffer: Buffer.from('hi') });
+  await page.waitForSelector('.toast.err:has-text("audio or video")');
+
+  await page.goto('/labs/export-settings/');
+  await page.selectOption('#lab-root select >> nth=0', 'shorts');
+  await page.fill('#lab-root input[type=text]', 'final cut; rm -rf.mov');
+  const cmd = await page.textContent('#lab-root pre code');
+  assert.match(cmd, /^ffmpeg -i final_cut__rm_-rf\.mov .*scale=1080:1920/);
+
+  await page.goto('/labs/captions-srt/');
+  await page.waitForSelector('#lab-root table');
+  const [dl] = await Promise.all([page.waitForEvent('download'), page.click('button:text-is("Download .srt")')]);
+  const srt = await readFile(await dl.path(), 'utf8');
+  assert.match(srt, /^1\n00:00:00,000 --> 00:00:0\d,\d{3}\n/);
+  await page.fill('#lab-root textarea >> nth=1', '1\n00:00:02,000 --> 00:00:01,000\nBad');
+  await page.click('text=Check SRT');
+  await page.waitForSelector('.warn-text:has-text("ends before it starts")');
+
+  await page.goto('/labs/rate-calculator/');
+  await page.waitForSelector('#lab-root .v');
+  assert.match(await page.textContent('#lab-root .result-grid'), /Day rate\$\d/);
+
+  await page.goto('/labs/shot-list/');
+  await page.click('text=Load example');
+  await page.waitForSelector('#lab-root tbody tr >> nth=4');
+  await page.fill('#lab-root tbody tr >> nth=0 >> input[aria-label^="desc"]', '=HYPERLINK("http://evil")');
+  await page.reload(); // pagehide flushes the pending save
+  await page.waitForSelector('#lab-root tbody tr >> nth=4');
+  await page.fill('#lab-root tbody tr >> nth=1 >> input[aria-label^="desc"]', 'Second edit');
+  await page.waitForSelector('[role=status]:has-text("Saved ✓")');
+  await page.reload();
+  await page.waitForSelector('#lab-root tbody tr >> nth=4');
+  assert.equal(await page.inputValue('#lab-root tbody tr >> nth=0 >> input[aria-label^="desc"]'), '=HYPERLINK("http://evil")');
+  const [csv] = await Promise.all([page.waitForEvent('download'), page.click('button:text-is("Export CSV")')]);
+  const csvText = await readFile(await csv.path(), 'utf8');
+  assert.match(csvText, /"'=HYPERLINK\(""http:\/\/evil""\)"/, 'formula neutralised');
+  noErrors(page, 'pro tools');
+  await ctx.close();
+});
+
+await t('toolkit: kit builder filters and ownership persists', async () => {
+  const { ctx, page } = await newPage();
+  await page.goto('/toolkit/');
+  await page.waitForSelector('#kit-summary:has-text("tools in your kit")');
+  await page.selectOption('#kit-budget', 'zero');
+  const zeroPrices = await page.locator('.tool-card:visible').evaluateAll((els) => els.map((e) => e.dataset.price + '/' + e.dataset.tier));
+  assert.ok(zeroPrices.length >= 5 && zeroPrices.every((p) => p.startsWith('free/') || p === 'freemium/essential'), zeroPrices.join(','));
+  await page.selectOption('#kit-budget', 'pro'); await page.selectOption('#kit-focus', 'color');
+  assert.ok(await page.isVisible('#tool-refmonitor'));
+  await page.check('[data-have="mediainfo"]');
+  await page.waitForSelector('#tool-mediainfo.owned');
+  await page.reload();
+  await page.waitForSelector('#tool-mediainfo.owned');
+  assert.ok(await page.isChecked('[data-have="mediainfo"]'));
+  assert.equal(await page.locator('.tool-card a[target=_blank]:not([rel*="noopener"])').count(), 0);
+  noErrors(page, 'toolkit');
   await ctx.close();
 });
 

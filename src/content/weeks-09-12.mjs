@@ -165,7 +165,7 @@ export const weeks9to12 = [
       'Design captions and hooks that maximise retention',
       'Reframe and repurpose horizontal content to vertical',
     ],
-    labs: ['easing', 'beat-sync', 'aspect-safe-zones'],
+    labs: ['easing', 'beat-sync', 'aspect-safe-zones', 'captions-srt', 'export-settings'],
     project: {
       title: 'The Viral Triple',
       brief: 'Make three 15–30s vertical edits: (1) a velocity/speed-ramp edit to music, (2) a talking-head short with dynamic captions, zooms and B-roll, (3) a seamless-transition travel or product edit. Check every frame against platform safe zones.',
@@ -308,7 +308,7 @@ export const weeks9to12 = [
       'Edit trailers, ads and music videos to rhythm',
       'Edit long-form YouTube and podcasts for retention',
     ],
-    labs: ['beat-sync'],
+    labs: ['beat-sync', 'shot-list', 'captions-srt'],
     project: {
       title: 'The Genre Gauntlet',
       brief: 'Choose 3 genres. Make one piece per genre: a 60-second trailer for a film that doesn\'t exist, a 30-second commercial, and a 2-minute mini-documentary.',
@@ -454,7 +454,7 @@ export const weeks9to12 = [
       'Export to any platform or broadcast spec',
       'Price, pitch and manage clients; build a portfolio and reel',
     ],
-    labs: ['bitrate-calculator', 'timecode'],
+    labs: ['bitrate-calculator', 'timecode', 'export-settings', 'loudness-meter', 'rate-calculator'],
     project: {
       title: 'CAPSTONE: The Showreel & The Client Job',
       brief: 'Produce a 60–90 second showreel of your best work from this course, plus one complete client-style project from brief to delivery (brief, quote, edit, review rounds, grade, mix, deliverables in 3 formats).',

@@ -13,7 +13,7 @@ export const weeks5to8 = [
       'Build layered sound design with SFX, risers, impacts and ambience',
       'Edit music seamlessly to picture',
     ],
-    labs: ['eq-trainer', 'beat-sync'],
+    labs: ['eq-trainer', 'beat-sync', 'loudness-meter'],
     project: {
       title: 'The Silent Film Rescue',
       brief: 'Take a 45-second action clip and delete its audio. Rebuild the whole soundtrack: room tone, foley, SFX, music, one line of ADR. Mix to −14 LUFS integrated, −1 dBTP.',
@@ -157,7 +157,7 @@ export const weeks5to8 = [
       'Read waveform, parade, vectorscope and histogram fluently',
       'Correctly transform log footage with color management or LUTs',
     ],
-    labs: ['color-harmony', 'color-grading'],
+    labs: ['color-harmony', 'color-grading', 'white-balance'],
     project: {
       title: 'Color Script',
       brief: 'Pick a film. Grab one frame every 2 minutes and build a "color script" strip. Identify the palette for each act and explain how color tracks the story. Then design a color script for your own 2-minute short.',

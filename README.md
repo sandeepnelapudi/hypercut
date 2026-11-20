@@ -3,14 +3,18 @@
 A 90-day video editing course website, from first cut to pro.
 
 - **12 weeks, 60 lessons, 62 quiz questions.** Topics in order: how video and editing engines work, NLE mastery, cinematography, editing theory, sound, color theory and science, color grading, motion graphics, VFX, trending effects, genre mastery, AI tools, delivery and the business of editing.
-- **14 interactive labs:** Color Grading Studio (live waveform, parade, vectorscope, histogram), Color Harmony, Shutter & FPS, Lens & Depth of Field, Composition Grids, Aspect Ratio & Safe Zones, Bitrate & Storage, Timecode (with drop-frame), Easing Curves, Beat Sync, EQ Ear Trainer, Chroma Key, Blend Modes and Shortcut Trainer.
+- **25 interactive labs, lessons and tools:**
+  - *Labs:* Color Grading Studio (live waveform, parade, vectorscope, histogram), Color Harmony, Shutter & FPS, Lens & Depth of Field, Composition Grids, Aspect Ratio & Safe Zones, Bitrate & Storage, Timecode (with drop-frame), Easing Curves, Beat Sync, EQ Ear Trainer, Chroma Key, Blend Modes and Shortcut Trainer.
+  - *Interactive lessons with auto-checked missions:* Exposure Triangle, White Balance, Three-Point Lighting, Inside the Codec (DCT compression), Trim Tools (ripple, roll, slip, slide) and the Kuleshov Experiment.
+  - *Pro tools:* LUFS Loudness Meter (ITU-R BS.1770-4), Export Settings Generator with FFmpeg commands, Caption & SRT Maker, Freelance Rate & Quote Calculator and Shot List Builder.
+- **Editor's Toolkit** (`/toolkit/`): 32 essential utilities, plugins, assets and pieces of hardware, with a kit builder by budget and focus and an "I have this" checklist.
 - **Scenario Playbook:** 31 real-world problems, each with a diagnosis, a fix and the location of the tools in Premiere Pro, DaVinci Resolve, Final Cut Pro and CapCut.
 - **Also included:** an Effects Cookbook (21 recipes), Software Compared (12 apps), *Inside the Engine* (13 chapters), a glossary, spaced-repetition flashcards, a 90-day planner, XP, levels, streaks, badges, notes, bookmarks, a dashboard and a certificate.
 
 ## Run it
 
 ```bash
-npm run build      # generates dist/ (105 pre-rendered pages)
+npm run build      # generates dist/ (117 pre-rendered pages)
 npm run serve      # http://localhost:4173
 ```
 
@@ -19,8 +23,8 @@ No dependencies are needed (Node 20 or later). Set `SITE_URL=https://your-domain
 ## Test
 
 ```bash
-npm test           # 40 unit tests: lab math, auth/security, progress, content, SEO, links
-npm run test:e2e   # 18 browser tests (Playwright): every page, flows, XSS, mobile, a11y
+npm test           # 51 unit tests: lab math, loudness, auth/security, progress, content, SEO, links
+npm run test:e2e   # 21 browser tests (Playwright): every page, flows, missions, tools, XSS, mobile, a11y
 ```
 
 ## Deploy

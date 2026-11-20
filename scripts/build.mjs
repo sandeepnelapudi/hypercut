@@ -10,6 +10,7 @@ import { software, scoreLabels, softwareNote } from '../src/content/software.mjs
 import { effects } from '../src/content/effects.mjs';
 import { glossary } from '../src/content/glossary.mjs';
 import { engineChapters } from '../src/content/engine.mjs';
+import { tools, TOOL_CATEGORIES, BUDGETS, FOCUSES } from '../src/content/toolkit.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(ROOT, 'dist');
@@ -45,6 +46,7 @@ const CSP = [
 const NAV = [
   ['/curriculum/', 'Curriculum'],
   ['/labs/', 'Labs'],
+  ['/toolkit/', 'Toolkit'],
   ['/playbook/', 'Playbook'],
   ['/effects/', 'Effects'],
   ['/software/', 'Software'],
@@ -111,7 +113,7 @@ ${body}
   <div class="container footer-grid">
     <div><a class="brand" href="/"><span class="brand-mark" aria-hidden="true">▶</span><span class="brand-name">HYPER<span>CUT</span></span></a><p class="muted">${esc(site.tagline)}</p></div>
     <div><h2 class="footer-h">Learn</h2><ul><li><a href="/curriculum/">Curriculum</a></li><li><a href="/planner/">90-Day Planner</a></li><li><a href="/flashcards/">Flashcards</a></li><li><a href="/glossary/">Glossary</a></li></ul></div>
-    <div><h2 class="footer-h">Master</h2><ul><li><a href="/labs/">Interactive Labs</a></li><li><a href="/playbook/">Scenario Playbook</a></li><li><a href="/effects/">Effects Cookbook</a></li><li><a href="/engine/">Inside the Engine</a></li></ul></div>
+    <div><h2 class="footer-h">Master</h2><ul><li><a href="/labs/">Interactive Labs</a></li><li><a href="/toolkit/">Editor's Toolkit</a></li><li><a href="/playbook/">Scenario Playbook</a></li><li><a href="/effects/">Effects Cookbook</a></li><li><a href="/engine/">Inside the Engine</a></li></ul></div>
     <div><h2 class="footer-h">About</h2><ul><li><a href="/about/">About HYPERCUT</a></li><li><a href="/software/">Software Compared</a></li><li><a href="/privacy/">Privacy</a></li><li><a href="/terms/">Terms</a></li></ul></div>
   </div>
   <div class="container footer-bottom muted">© ${new Date().getFullYear()} ${esc(site.fullName)}. Made for editors who refuse to be average.</div>
@@ -183,7 +185,7 @@ async function buildHome() {
     <ul class="stat-row" aria-label="Course at a glance">
       <li><strong>12</strong><span>weeks</span></li>
       <li><strong>${totalLessons}</strong><span>lessons</span></li>
-      <li><strong>${labs.length}</strong><span>interactive labs</span></li>
+      <li><strong>${labs.length}</strong><span>labs & tools</span></li>
       <li><strong>${scenarios.length}</strong><span>real-world scenarios</span></li>
       <li><strong>${totalQuiz}</strong><span>quiz questions</span></li>
     </ul>
@@ -206,6 +208,9 @@ async function buildHome() {
     <div class="feature"><span class="f-icon" aria-hidden="true">🔥</span><h3>Trend-proof effects</h3><p>${effects.length} step-by-step recipes for speed ramps, whip pans, text-behind-subject, datamosh, film emulation and more.</p></div>
     <div class="feature"><span class="f-icon" aria-hidden="true">📅</span><h3>90-day planner</h3><p>A daily plan with streaks, XP, badges and spaced-repetition flashcards to keep you on track.</p></div>
     <div class="feature"><span class="f-icon" aria-hidden="true">🏆</span><h3>Capstone + certificate</h3><p>Build a showreel and a full client project, then download your HYPERCUT certificate.</p></div>
+    <div class="feature"><span class="f-icon" aria-hidden="true">🎯</span><h3>Interactive lessons with missions</h3><p>Expose a sunny scene with ND, light a Rembrandt portrait, master ripple, roll, slip and slide, and recreate the Kuleshov experiment, with every challenge checked automatically.</p></div>
+    <div class="feature"><span class="f-icon" aria-hidden="true">🧰</span><h3>The editor's toolkit</h3><p>${tools.length} essential tools, plugins, assets and hardware, with a kit builder for your budget and type of work.</p></div>
+    <div class="feature"><span class="f-icon" aria-hidden="true">🔊</span><h3>Pro tools in your browser</h3><p>A LUFS loudness meter, export settings with FFmpeg commands, a caption/SRT maker, a rate calculator and a shot list builder.</p></div>
   </div>
 </section>
 
@@ -402,6 +407,17 @@ const labTheory = {
   'eq-trainer': 'A peaking EQ boosts a band around a centre frequency. Training with pink noise, which has equal energy per octave, teaches you to recognise each region: mud (250 Hz), honk (1 kHz), presence (4 kHz) and air (10 kHz). Mixers use this to fix problems in seconds.',
   'chroma-key': 'Keyers measure how far each pixel is from the key color. Tolerance sets which pixels become fully transparent and softness sets the partial edge. Spill suppression limits green to the average of red and blue so edges are not tinted green.',
   'blend-modes': 'Blend modes are per-pixel formulas combining a top layer (a) with the layer below (b), using values from 0 to 1. Multiply = a·b, Screen = 1−(1−a)(1−b), Difference = |a−b|. The canvas uses the browser\'s compositing engine, which follows the same W3C formulas used by most editing software.',
+  'exposure-triangle': 'Exposure value EV100 = log2(N²/t) − log2(ISO/100). Each ND stop adds 1 EV. If the scene\'s light level (EV) is higher than your settings\' EV, the image is overexposed by the difference in stops. In video the shutter is fixed by the 180° rule (t = 1/(2·fps)), so you control exposure with the aperture, ND filters and ISO. The aperture also sets depth of field, and ISO adds noise.',
+  'white-balance': 'A light source has a color temperature in Kelvin. The camera\'s white balance tells it which temperature should render as neutral. The lab models light color with a blackbody approximation: the image gains are light RGB ÷ white-balance RGB. When they match, a grey card is grey. The eyedropper works backwards from a neutral sample to estimate the light, exactly like a white-balance picker in your editor.',
+  'lighting': 'The lab shades a 3D head per pixel (Lambert diffuse plus specular and rim terms) from a key light at your chosen angle and height, a fill light on the opposite side, a back or rim light, and a background light. Key:fill ratio = (key + fill) ÷ fill. 2:1 is bright and commercial, 4:1 is natural drama, and 8:1 or more is noir. Every stop of contrast doubles the ratio.',
+  'compression': 'This is the real intra-frame compression pipeline used by JPEG, Motion JPEG and, in refined forms, ProRes, H.264 and HEVC. Pixels are converted to Y′CbCr, color is optionally subsampled (4:2:2 or 4:2:0), each 8×8 block is transformed with a DCT, coefficients are divided by a quantization matrix and rounded (the lossy step), and the image is rebuilt. The percentage of non-zero coefficients is a good proxy for bitrate.',
+  'trim-tools': 'Each clip references a range of its source media (in to out) and has unused "handles" before and after. Ripple changes one side of a clip and shifts everything after it. Roll moves a cut between two clips. Slip moves the source range inside a fixed slot. Slide moves a clip while its neighbours absorb the change. No trim can use frames beyond the source media, which is why handles matter.',
+  'kuleshov': 'Lev Kuleshov\'s experiments in the 1920s showed audiences the same neutral close-up intercut with different shots, and they "saw" different emotions in the actor. The meaning is created by the juxtaposition, not by either shot alone. Every reaction shot and cutaway you place uses this effect.',
+  'loudness-meter': 'Loudness is measured to ITU-R BS.1770-4. Each channel is K-weighted (a high-shelf "head" filter plus a high-pass), mean square is taken over 400 ms blocks overlapping by 75%, and blocks below −70 LUFS (absolute gate) and then 10 LU below the average (relative gate) are discarded. Integrated loudness = −0.691 + 10·log10 of the gated mean. A stereo 1 kHz tone at −20 dBFS reads −20 LUFS.',
+  'export-settings': 'Settings follow the platforms\' published upload recommendations and broadcast practice: H.264 High profile at a constrained VBR for web, ProRes 422 HQ for masters, Rec.709 color tags, 48 kHz audio and each platform\'s loudness target. The FFmpeg command applies the same settings with free software.',
+  'captions-srt': 'Professional subtitle guidelines (Netflix, BBC and others) recommend 1–2 lines, about 42 characters per line (shorter for vertical video), and a reading speed of around 15–20 characters per second. The tool breaks your text at word and sentence boundaries, times each caption in proportion to its length, and flags captions that are too fast to read.',
+  'rate-calculator': 'Day rate = (take-home income grossed up for tax + business expenses) ÷ billable days. Billable days = working weeks × days per week × utilisation. Quotes estimate editing hours from the finished duration and project type, with add-ons for grading, sound and extra revision rounds.',
+  'shot-list': 'A shot list is the bridge between script and edit. Planning coverage (wide for geography, mediums for performance, close-ups for emotion, inserts for rhythm) makes sure the editor has the shots needed to cut the scene. Exported CSV cells are protected against spreadsheet formula injection.',
   'shortcut-trainer': 'Speed comes from muscle memory. Shortcuts listed are default mappings, and some differ by OS and version, so check your app\'s keyboard customisation panel. On macOS, Cmd replaces Ctrl.',
 };
 
@@ -412,7 +428,8 @@ async function buildLabs() {
   ${breadcrumbHtml([['Home', '/'], ['Labs', '/labs/']])}
   <h1 class="page-title">Interactive labs</h1>
   <p class="lead">Hands-on tools that turn theory into instinct. Everything runs in your browser, and images you load stay on your device.</p>
-  ${cats.map((c) => `<h2 class="phase-heading">${esc(c)}</h2><div class="lab-grid">${labs.filter((l) => l.cat === c).map((l) => `<a class="lab-card" href="/labs/${l.id}/" data-lab-card="${l.id}"><span class="lab-icon" aria-hidden="true">${l.icon}</span><strong>${esc(l.name)}</strong><span class="muted small">${esc(l.blurb)}</span></a>`).join('')}</div>`).join('')}
+  <p><a href="/toolkit/">Looking for the software and hardware editors need? See the Editor's Toolkit →</a></p>
+  ${cats.map((c) => `<h2 class="phase-heading">${esc(c)}</h2><div class="lab-grid">${labs.filter((l) => l.cat === c).map((l) => `<a class="lab-card" href="/labs/${l.id}/" data-lab-card="${l.id}"><span class="lab-icon" aria-hidden="true">${l.icon}</span><strong>${esc(l.name)}</strong>${l.lesson ? '<span class="tag essential">Interactive lesson · missions</span>' : ''}<span class="muted small">${esc(l.blurb)}</span></a>`).join('')}</div>`).join('')}
 </section>`;
   await emit('/labs/', layout({ title: 'Interactive Video Editing Labs', description: `${labs.length} free interactive labs: color grading with live scopes, chroma key, depth of field, timecode, bitrate, EQ ear training, easing curves and more.`, urlPath: '/labs/', body, jsonld: [breadcrumbLd([['Home', '/'], ['Labs', '/labs/']])] }), { priority: 0.9 });
 
@@ -526,6 +543,44 @@ async function buildEffects() {
   </div>
 </section>`;
   await emit('/effects/', layout({ title: 'Trending Video Effects & Transitions: Step-by-Step Recipes', description: 'How to make speed ramps, whip pans, zoom transitions, text behind subject, glitch, datamosh, film emulation, VHS, light leaks and more.', urlPath: '/effects/', body, jsonld: [breadcrumbLd([['Home', '/'], ['Effects Cookbook', '/effects/']])] }), { priority: 0.9 });
+}
+
+async function buildToolkit() {
+  const crumbs = [['Home', '/'], ['Editor\'s Toolkit', '/toolkit/']];
+  const priceLabel = { free: 'Free', freemium: 'Free tier', paid: 'Paid', subscription: 'Subscription' };
+  const card = (t) => {
+    const w = weeks[t.week - 1];
+    return `<article class="card tool-card" id="tool-${t.id}" data-tool="${t.id}" data-tier="${t.tier}" data-price="${t.price}" data-focus="${t.focus.join(' ')}">
+      <h3>${esc(t.name)}</h3>
+      <div class="tags"><span class="tag ${t.tier === 'essential' ? 'essential' : ''}">${t.tier === 'essential' ? 'Essential' : t.tier === 'recommended' ? 'Recommended' : 'Pro upgrade'}</span><span class="tag ${t.price === 'free' ? 'free' : ''}">${priceLabel[t.price]}</span></div>
+      <p class="small">${esc(t.what)}</p>
+      <p class="small muted"><strong>Why you need it:</strong> ${esc(t.why)}</p>
+      <p class="small">${t.url ? `<a href="${esc(t.url)}" target="_blank" rel="noopener noreferrer">Official site ↗</a> · ` : ''}<a href="${weekPath(w)}">Used in Week ${w.n}</a></p>
+      <label class="have"><input type="checkbox" data-have="${t.id}"> I have this</label>
+    </article>`;
+  };
+  const builtIn = labs.filter((l) => l.cat === 'Pro Tools');
+  const body = `
+<section class="container section">
+  ${breadcrumbHtml(crumbs)}
+  <h1 class="page-title">The editor's toolkit</h1>
+  <p class="lead">The software, utilities, plugins, asset libraries and hardware that working editors rely on. Everything here is explained in the course, and most of the essentials are free.</p>
+  <section class="card" aria-labelledby="kit-h">
+    <h2 id="kit-h" class="h3">🧰 Build your kit</h2>
+    <p class="muted">Pick your budget and the work you want to do. The list below filters to what you need, and you can tick off what you already own.</p>
+    <div class="filter-bar">
+      <label for="kit-budget">Budget</label><select id="kit-budget">${BUDGETS.map(([v, l]) => `<option value="${v}"${v === 'starter' ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select>
+      <label for="kit-focus">Focus</label><select id="kit-focus">${FOCUSES.map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join('')}</select>
+      <label for="kit-all"><input type="checkbox" id="kit-all"> Show every tool</label>
+    </div>
+    <p id="kit-summary" class="muted small" role="status" aria-live="polite"></p>
+  </section>
+  ${TOOL_CATEGORIES.map(([id, name, blurb]) => `<section class="tool-cat" data-cat="${id}"><h2 class="phase-heading">${esc(name)}</h2><p class="muted">${esc(blurb)}</p><div class="kit-grid">${tools.filter((t) => t.cat === id).map(card).join('')}</div></section>`).join('')}
+  <section class="card"><h2 class="h3">Built into HYPERCUT (free, in your browser)</h2><div class="lab-grid">${builtIn.map((l) => `<a class="lab-card" href="/labs/${l.id}/"><span class="lab-icon" aria-hidden="true">${l.icon}</span><strong>${esc(l.name)}</strong><span class="muted small">${esc(l.blurb)}</span></a>`).join('')}</div></section>
+  <p class="muted small">HYPERCUT has no affiliation with any vendor listed and earns nothing from these links. Prices and plans change, so check each vendor's site. Product names are trademarks of their owners.</p>
+</section>`;
+  const listLd = { '@context': 'https://schema.org', '@type': 'ItemList', name: 'Essential video editing tools', itemListElement: tools.map((t, i) => ({ '@type': 'ListItem', position: i + 1, name: t.name, description: t.what })) };
+  await emit('/toolkit/', layout({ title: 'Essential Video Editing Tools, Plugins & Hardware', description: 'The essential video editing toolkit: free utilities, audio repair, color calibration, plugins, review tools, licensed music and hardware, with a kit builder for every budget.', urlPath: '/toolkit/', body, jsonld: [breadcrumbLd(crumbs), listLd], scripts: ['/assets/js/pages/toolkit.js'] }), { priority: 0.9 });
 }
 
 async function buildEngine() {
@@ -669,6 +724,7 @@ async function buildSearchIndex() {
   effects.forEach((e) => idx.push({ t: e.name, u: `/effects/#${e.id}`, k: 'Effect', s: e.trend, b: e.steps.join(' ') }));
   software.forEach((s) => idx.push({ t: s.name, u: `/software/#sw-${s.id}`, k: 'Software', s: s.category, b: `${s.pros.join(' ')} ${s.cons.join(' ')} ${s.bestFor.join(' ')}` }));
   glossary.forEach(([t, d]) => idx.push({ t, u: `/glossary/#term-${slugify(t)}`, k: 'Term', s: d, b: '' }));
+  tools.forEach((t) => idx.push({ t: t.name, u: `/toolkit/#tool-${t.id}`, k: 'Tool', s: t.what, b: t.why }));
   engineChapters.forEach((c) => idx.push({ t: c.title, u: `/engine/#${c.id}`, k: 'Engine', s: stripTags(c.body).slice(0, 160), b: stripTags(c.body) }));
   await writeFile(path.join(DIST, 'search-index.json'), JSON.stringify(idx));
   // Course map consumed by client (ids, titles, paths)
@@ -713,6 +769,7 @@ async function main() {
   await buildSoftware();
   await buildEffects();
   await buildEngine();
+  await buildToolkit();
   await buildGlossary();
   await buildAppPages();
   await buildStatic();

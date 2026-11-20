@@ -65,3 +65,38 @@ export function fileButton(label, onFile) {
 export async function copyText(text) {
   try { await navigator.clipboard.writeText(text); toast(`Copied ${text}`); } catch { toast('Copy failed. Select the text and copy it manually.', 'err'); }
 }
+
+// Auto-checked challenges ("missions") that turn a lab into an interactive lesson.
+// missions: [{ title, hint, test: () => boolean, setup?: () => void }]
+export function missionPanel(missions, { heading = 'Missions' } = {}) {
+  const done = new Set();
+  const items = missions.map((m, i) => {
+    const status = h('span', { class: 'mission-status', 'aria-hidden': 'true' }, '○');
+    const btn = m.setup ? h('button', { class: 'btn btn-sm btn-ghost', type: 'button', on: { click: () => { m.setup(); check(); } } }, 'Set up') : null;
+    const li = h('li', { class: 'mission' }, status, h('div', {}, h('strong', {}, m.title), m.hint ? h('p', { class: 'muted small' }, m.hint) : null), btn);
+    return { li, status, m, i };
+  });
+  const count = h('p', { class: 'muted small', role: 'status', 'aria-live': 'polite' });
+  const el = h('section', { class: 'card missions' }, h('h2', { class: 'h4' }, `🎯 ${heading}`), h('ol', { class: 'mission-list' }, items.map((x) => x.li)), count);
+  function check() {
+    for (const it of items) {
+      let ok = false;
+      try { ok = !!it.m.test(); } catch { ok = false; }
+      if (ok && !done.has(it.i)) { done.add(it.i); toast(`Mission complete: ${it.m.title} ✓`, 'xp'); }
+      it.li.classList.toggle('done', done.has(it.i));
+      it.status.textContent = done.has(it.i) ? '✓' : '○';
+    }
+    count.textContent = `${done.size}/${missions.length} missions complete${done.size === missions.length ? '. Lesson mastered! 🏆' : ''}`;
+  }
+  check();
+  return { el, check };
+}
+
+export function download(filename, text, type = 'text/plain') {
+  const blob = new Blob([text], { type: `${type};charset=utf-8` });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
